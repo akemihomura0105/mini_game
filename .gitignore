@@ -1,2 +1,4 @@
-.vs/
-.Debug/
+/.vs
+/Debug
+/Game_server/Debug
+/miniGame/Debug
