@@ -5,6 +5,7 @@
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>
 #include <memory>
+#include "../proto/Game_proto.h"
 using namespace boost::asio;
 class System
 {
@@ -16,7 +17,8 @@ private:
 	io_context& io;
 	ip::tcp::endpoint& ep;
 	std::shared_ptr<ip::tcp::socket>sock;
-	void login(boost::system::error_code& ec);
+	int login();
+	void verify_login(boost::system::error_code& ec);
 	void show_room();
 	void join_room();
 	void create_room();

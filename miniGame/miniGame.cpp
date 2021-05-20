@@ -39,10 +39,6 @@ int main(int argc, char* argv[])
 	Test ans;
 	ia >> ans;
 	std::cout << ans.a << " " << ans.b << " " << ans.str << std::endl;
-
-
-
-
 	//System system(io, ep);
 	//system.run();
 }

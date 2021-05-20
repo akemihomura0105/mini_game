@@ -1,7 +1,8 @@
-﻿  miniGame.cpp
+﻿  System.cpp
   Please define _WIN32_WINNT or _WIN32_WINDOWS appropriately. For example:
   - add -D_WIN32_WINNT=0x0601 to the compiler command line; or
   - add _WIN32_WINNT=0x0601 to your project's Preprocessor Definitions.
   Assuming _WIN32_WINNT=0x0601 (i.e. Windows 7 target).
 C:\boost\boost\bind.hpp(41): message : The practice of declaring the Bind placeholders (_1, _2, ...) in the global namespace is deprecated. Please use <boost/bind/bind.hpp> + using namespace boost::placeholders, or define BOOST_BIND_GLOBAL_PLACEHOLDERS to retain the current behavior.
+C:\Users\zhang\source\repos\miniGame\miniGame\System.cpp(26): warning C4715: “System::login”: 不是所有的控件路径都返回值
   miniGame.vcxproj -> C:\Users\zhang\source\repos\miniGame\Debug\miniGame.exe
