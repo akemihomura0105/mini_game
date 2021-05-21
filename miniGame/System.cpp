@@ -8,7 +8,7 @@ int System::login()
 	std::string username;
 	std::cin >> username;
 	Proto_msg msg(1, 1);
-	serialize(username, msg.body);
+	serialize_obj(username, msg.body);
 	auto buf = msg.encode();
 	boost::system::error_code ec;
 	sock->write_some(buffer(buf), ec);
@@ -27,6 +27,7 @@ int System::login()
 
 void System::run()
 {
+	sock->connect(ep);
 	while (login())
 	{
 		//do something

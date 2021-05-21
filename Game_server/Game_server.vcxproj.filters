@@ -27,9 +27,6 @@
     <ClCompile Include="Router.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="Packet_resolver.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="..\proto\Game_proto.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -42,9 +39,6 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="Router.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="Packet_resolver.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="..\proto\Game_proto.h">

@@ -146,14 +146,12 @@
   <ItemGroup>
     <ClCompile Include="..\proto\Game_proto.cpp" />
     <ClCompile Include="Game_server.cpp" />
-    <ClCompile Include="Packet_resolver.cpp" />
     <ClCompile Include="Router.cpp" />
     <ClCompile Include="Tcp_connection.cpp" />
     <ClCompile Include="Tcp_server.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\proto\Game_proto.h" />
-    <ClInclude Include="Packet_resolver.h" />
     <ClInclude Include="Router.h" />
     <ClInclude Include="Tcp_connection.h" />
     <ClInclude Include="Tcp_server.h" />
