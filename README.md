@@ -7,7 +7,7 @@
 ### 项目依赖：
 
 1. boost1.76及以上版本
-2. visual studio2020
+2. visual studio2019
 3. 编译器需支持c++17。
 
 ### 项目配置

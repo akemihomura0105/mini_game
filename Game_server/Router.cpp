@@ -1,4 +1,5 @@
 #include "Router.h"
+#include "System.h"
 #include <iostream>
 
 Router& Router::get_instance()
@@ -7,7 +8,7 @@ Router& Router::get_instance()
 	return router;
 }
 
-int Router::push_package(std::shared_ptr<Proto_msg> msg)
+int Router::push_package(std::shared_ptr<Tcp_connection>conn, std::shared_ptr<Proto_msg> msg)
 {
 	switch (msg->head.service)
 	{
@@ -16,7 +17,7 @@ int Router::push_package(std::shared_ptr<Proto_msg> msg)
 	{
 		std::string username;
 		deserialize_obj(msg->body, username);
-		std::cout << username;
+		System::get_instance().login(conn, username);
 	}
 	}
 	return 0;

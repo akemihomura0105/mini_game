@@ -6,6 +6,7 @@
 #include <boost/archive/text_oarchive.hpp>
 #include <memory>
 #include "../proto/Game_proto.h"
+#include "../state_code/state_code.h"
 using namespace boost::asio;
 class System
 {
@@ -18,6 +19,7 @@ private:
 	ip::tcp::endpoint& ep;
 	std::shared_ptr<ip::tcp::socket>sock;
 	int login();
+	std::shared_ptr<Proto_msg> get_msg();
 	void verify_login(boost::system::error_code& ec);
 	void show_room();
 	void join_room();

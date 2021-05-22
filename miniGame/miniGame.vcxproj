@@ -148,12 +148,14 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\proto\Game_proto.cpp" />
+    <ClCompile Include="..\state_code\state_code.cpp" />
     <ClCompile Include="Character.cpp" />
     <ClCompile Include="miniGame.cpp" />
     <ClCompile Include="System.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\proto\Game_proto.h" />
+    <ClInclude Include="..\state_code\state_code.h" />
     <ClInclude Include="Character.h" />
     <ClInclude Include="System.h" />
     <ClInclude Include="tools.h" />

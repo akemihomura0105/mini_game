@@ -145,16 +145,23 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\proto\Game_proto.cpp" />
+    <ClCompile Include="..\state_code\state_code.cpp" />
+    <ClCompile Include="Game_room.cpp" />
     <ClCompile Include="Game_server.cpp" />
-    <ClCompile Include="Router.cpp" />
+    <ClCompile Include="System.cpp" />
     <ClCompile Include="Tcp_connection.cpp" />
     <ClCompile Include="Tcp_server.cpp" />
+    <ClCompile Include="User.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\proto\Game_proto.h" />
-    <ClInclude Include="Router.h" />
+    <ClInclude Include="..\state_code\state_code.h" />
+    <ClInclude Include="Game_room.h" />
+    <ClInclude Include="predefine.h" />
+    <ClInclude Include="System.h" />
     <ClInclude Include="Tcp_connection.h" />
     <ClInclude Include="Tcp_server.h" />
+    <ClInclude Include="User.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

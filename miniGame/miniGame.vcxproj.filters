@@ -27,6 +27,9 @@
     <ClCompile Include="..\proto\Game_proto.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="..\state_code\state_code.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Character.h">
@@ -39,6 +42,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="..\proto\Game_proto.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\state_code\state_code.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
