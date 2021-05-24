@@ -1,7 +1,11 @@
 #include "Tcp_connection.h"
 
-Tcp_connection::Tcp_connection(io_context& _io, std::shared_ptr<ip::tcp::socket> _sock) :io(_io), sock(_sock)
+Tcp_connection::Tcp_connection(io_context& _io, std::shared_ptr<ip::tcp::socket> _sock,
+	std::queue<std::shared_ptr<Proto_msg>>& _msg_que, size_t _session_id)
+	:io(_io), sock(_sock), msg_que(_msg_que), session_id(_session_id)
 {
+	write_buf.resize(65536);
+	read_buf.resize(65536);
 }
 
 //连接建立，开始处理包头。
@@ -48,8 +52,7 @@ void Tcp_connection::push_msg(std::shared_ptr<Proto_msg> proto_ptr, const boost:
 	{
 		std::cerr << ec.message();
 	}
-	route(proto_ptr);
-	//Router::get_instance().push_package(shared_from_this(), proto_ptr);
+	msg_que.push(proto_ptr);
 	get_msg_head();
 }
 
@@ -69,31 +72,14 @@ void Tcp_connection::send_event()
 	}
 }
 
-ASYNC_RET Tcp_connection::send_msg(std::shared_ptr<ip::tcp::socket>sock, std::shared_ptr<Proto_msg> msg_ptr)
+ASYNC_RET Tcp_connection::send_msg(std::shared_ptr<Proto_msg> msg_ptr)
 {
-	static char write_buf[1024];
-	auto ptr = msg_ptr->encode();
-	async_write(*sock, buffer(*ptr), bind(Tcp_connection::socket_error_handle, ptr, placeholders::error));
+	msg_ptr->encode(write_buf);
+	std::cerr << msg_ptr->head.len << std::endl;
+	async_write(*sock, buffer(write_buf, msg_ptr->head.len + sizeof(Proto_head)), bind(&Tcp_connection::socket_error_handle, shared_from_this(), placeholders::error));
 }
 
-void Tcp_connection::route(std::shared_ptr<Proto_msg> msg_ptr)
-{
-	static int cnt = 0;
-	std::cout << msg_ptr->head.service << std::endl;
-	switch (msg_ptr->head.service)
-	{
-		//case 1:登录服务
-	case 1:
-	{
-		std::string username;
-		deserialize_obj(msg_ptr->body, username);
-		System::get_instance().login(sock, username);
-		break;
-	}
-	}
-}
-
-void Tcp_connection::socket_error_handle(std::shared_ptr<std::string>buf, const boost::system::error_code& ec)
+ASYNC_RET Tcp_connection::socket_error_handle(const boost::system::error_code& ec)
 {
 	if (ec)
 		std::cerr << ec.message();

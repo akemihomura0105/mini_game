@@ -1,7 +1,20 @@
 #pragma once
 #include<string>
 #include<boost/serialization/serialization.hpp>
-enum class CODE { NONE, LOGIN_SUCCESS, LOGIN_REPEATED };
+enum  CODE { NONE, LOGIN_SUCCESS, LOGIN_REPEATED };
+/*namespace boost
+{
+	namespace serialization
+	{
+		template<typename Archive>
+		void serialize(Archive& ar, CODE& a, const unsigned int version)
+		{
+			ar& a;
+		}
+	}
+}*/
+
+
 class state_code
 {
 public:

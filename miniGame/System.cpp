@@ -8,7 +8,7 @@ int System::login()
 	std::string username;
 	std::cin >> username;
 	Proto_msg msg(1, 1);
-	serialize_obj(username, msg.body);
+	serialize_obj(msg.body, session_id, username);
 	auto buf = msg.encode();
 	boost::system::error_code ec;
 	write(*sock, buffer(*buf), ec);
@@ -37,16 +37,12 @@ std::shared_ptr<Proto_msg> System::get_msg()
 {
 	auto msg_ptr = std::make_shared<Proto_msg>(1);
 	boost::system::error_code ec;
-	std::string s;
-	s.resize(10000);
-	read(*sock, buffer(s));
 	read(*sock, buffer(&msg_ptr->head, sizeof(Proto_head)), ec);
 	if (ec)
 		std::cerr << ec.message() << std::endl;
-	std::cerr << msg_ptr->head.service;
+	std::cerr << msg_ptr->head.service << "\n";
 	std::cerr << msg_ptr->head.len << std::endl;
 	msg_ptr->body.resize(msg_ptr->head.len);
-	std::cerr << msg_ptr->head.len << std::endl;
 	read(*sock, buffer(msg_ptr->body), ec);
 	if (ec)
 		std::cerr << ec.message() << std::endl;
@@ -56,12 +52,16 @@ std::shared_ptr<Proto_msg> System::get_msg()
 void System::run()
 {
 	sock->connect(ep);
+	auto msg = get_msg();
+	deserialize_obj(msg->body, session_id);
+	std::cout << "建立了会话：" << session_id << std::endl;
 	while (login())
 	{
 		//do something
 		login();
 	}
 	std::cout << "login successfully" << std::endl;
+	system("pause");
 
 }
 

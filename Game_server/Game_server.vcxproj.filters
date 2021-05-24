@@ -18,9 +18,6 @@
     <ClCompile Include="Tcp_connection.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="Tcp_server.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="User.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -57,9 +54,6 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="Tcp_connection.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="Tcp_server.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="User.h">

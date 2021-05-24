@@ -1,10 +1,10 @@
-﻿#include "Tcp_server.h"
+﻿#include "System.h"
 
 int main()
 {
 	io_context io;
 	ip::tcp::endpoint ep(ip::tcp::v4(), 12345);
-	auto server = std::make_shared<Tcp_server>(io, ep);
-	server->run();
+	auto system = std::make_shared<System>(io, ep);
+	system->run();
 	io.run();
 }

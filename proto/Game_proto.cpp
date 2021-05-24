@@ -16,6 +16,14 @@ std::shared_ptr<std::string> Proto_msg::encode()
 	return data;
 }
 
+void Proto_msg::encode(std::string& buffer)
+{
+	head.len = body.size();
+	assert(buffer.size() >= sizeof(Proto_head) + head.len);
+	memcpy(&buffer[0], &head, sizeof(Proto_head));
+	std::copy(body.begin(), body.end(), &buffer[sizeof(Proto_head)]);
+}
+
 int Proto_msg::decode(const std::string& data)
 {
 	return 0;

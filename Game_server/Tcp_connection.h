@@ -5,27 +5,30 @@
 #include <memory>
 #include <queue>
 #include <iostream>
+#include "predefine.h"
 //#include "Router.h"
-#include "System.h"
 
 using namespace boost::asio;
 
 class Tcp_connection :public std::enable_shared_from_this<Tcp_connection>
 {
 public:
-	Tcp_connection(io_context& _io, std::shared_ptr<ip::tcp::socket>_sock);
+	Tcp_connection(io_context& _io, std::shared_ptr<ip::tcp::socket>_sock, std::queue<std::shared_ptr<Proto_msg>>& msg_que, size_t session_id);
 	void run();
+
 	void get_msg_head();
 	void get_msg_body(std::shared_ptr<Proto_msg>proto_ptr, const boost::system::error_code& ec);
 	void push_msg(std::shared_ptr<Proto_msg>proto_ptr, const boost::system::error_code& ec);
 
 	void push_event(std::shared_ptr<Proto_msg>msg_ptr);
 	void send_event();
-	static ASYNC_RET send_msg(std::shared_ptr<ip::tcp::socket>sock, std::shared_ptr<Proto_msg>msg_ptr);
-	void route(std::shared_ptr<Proto_msg>msg_ptr);
-	static void socket_error_handle(std::shared_ptr<std::string>buf, const boost::system::error_code& ec);
+	ASYNC_RET send_msg(std::shared_ptr<Proto_msg>msg_ptr);
+	ASYNC_RET socket_error_handle(const boost::system::error_code& ec);
 private:
 	io_context& io;
 	std::shared_ptr<ip::tcp::socket>sock;
 	std::queue<std::shared_ptr<Proto_msg>>event_que;
+	std::queue<std::shared_ptr<Proto_msg>>& msg_que;
+	std::string write_buf, read_buf;
+	size_t session_id;
 };

@@ -18,6 +18,7 @@ private:
 	io_context& io;
 	ip::tcp::endpoint& ep;
 	std::shared_ptr<ip::tcp::socket>sock;
+	size_t session_id;
 	int login();
 	std::shared_ptr<Proto_msg> get_msg();
 	void verify_login(boost::system::error_code& ec);

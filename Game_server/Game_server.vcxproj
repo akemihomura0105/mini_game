@@ -150,7 +150,6 @@
     <ClCompile Include="Game_server.cpp" />
     <ClCompile Include="System.cpp" />
     <ClCompile Include="Tcp_connection.cpp" />
-    <ClCompile Include="Tcp_server.cpp" />
     <ClCompile Include="User.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -160,7 +159,6 @@
     <ClInclude Include="predefine.h" />
     <ClInclude Include="System.h" />
     <ClInclude Include="Tcp_connection.h" />
-    <ClInclude Include="Tcp_server.h" />
     <ClInclude Include="User.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

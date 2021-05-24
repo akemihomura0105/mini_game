@@ -28,55 +28,65 @@
 #include <boost/endian.hpp>
 #include <vector>
 #include <string_view>
+#include <SDKDDKVer.h>
+#include "../state_code/state_code.h"
 
 using namespace boost::asio;
 
-/*
-* Desc:	对象序列化，要求对象必须满足boost序列化库中的序列化条件。
-* P0:	表示要序列化的对象
-* P1:	表示序列化至某个string缓冲区，函数将自动对缓冲区扩容，但其并不会执行shrink操作。
-* P2:	表示是否要追加缓冲区 !NTT!
-*/
 template<typename T>
-void serialize_obj(const T& obj, std::string& buffer, bool append = false)
+void deserialize_obj0(boost::archive::text_iarchive& ia, T& obj)
 {
-	std::stringstream os;
-	boost::archive::text_oarchive oa(os);
-	oa << obj;
-	size_t add = (append ? 0 : buffer.size());//add表示所要填写的begin位置
-	buffer.resize(os.str().size() + add);
-	for (int i = add; i < add + os.str().size(); i++)
-		os.get(buffer[i]);
+	ia >> obj;
 }
-template<typename T>
-void serialize_obj(T&& obj, std::string& buffer, bool append = false)
+template<typename T, typename ...Args>
+void deserialize_obj0(boost::archive::text_iarchive& ia, T& obj, Args&... args)
 {
-	std::stringstream os;
-	boost::archive::text_oarchive oa(os);
-	oa << obj;
-	size_t add = (append ? 0 : buffer.size());//add表示所要填写的begin位置
-	buffer.resize(os.str().size() + add);
-	for (int i = add; i < add + os.str().size(); i++)
-		os.get(buffer[i]);
+	ia >> obj;
+	deserialize_obj0(ia, args...);
 }
-
 /*
 * Desc:	对象反序列化，要求输入合法
-* P0:	表示经过序列化字节流的缓冲区
-* P1:	表示反序列化后覆盖的对象。
+* data:	表示经过序列化字节流的缓冲区
+* args:	表示反序列化后覆盖的对象。
 */
-template<typename T>
-void deserialize_obj(const std::string& data, T& obj)
+template<typename ...Args>
+void deserialize_obj(const std::string& data, Args&... args)
 {
 	std::stringstream is(data);
 	boost::archive::text_iarchive ia(is);
-	ia >> obj;
+	deserialize_obj0(ia, args...);
+}
+
+template<typename T>
+void serialize_obj0(boost::archive::text_oarchive& oa, std::stringstream& os, std::string& buffer, T& obj)
+{
+	oa << obj;
+	buffer.resize(os.str().size());
+	for (int i = 0; i < os.str().size(); i++)
+		os.get(buffer[i]);
+}
+template<typename T, typename ...Args>
+void serialize_obj0(boost::archive::text_oarchive& oa, std::stringstream& os, std::string& buffer, T& obj, Args&&... args)
+{
+	oa << obj;
+	serialize_obj0(oa, os, buffer, args...);
+}
+/*
+* Desc:		对象序列化，要求对象必须满足boost序列化库中的序列化条件。
+* buffer:	表示序列化至某个string缓冲区，函数将自动对缓冲区扩容，但其并不会执行shrink操作。
+* args:		表示要序列化的对象列表。
+*/
+template<typename ...Args>
+void serialize_obj(std::string& buffer, Args&&... args)
+{
+	std::stringstream os;
+	boost::archive::text_oarchive oa(os);
+	serialize_obj0(oa, os, buffer, std::forward<Args&>(args)...);
 }
 
 /*
 * Desc:	网络序使用boost::endian::big_uint8_t实现
 * Tag:	serializable
-*
 */
 #pragma pack(push,4)
 const boost::endian::big_uint8_t PROTO_MAGIC = 0x12;
@@ -110,6 +120,7 @@ struct Proto_msg
 	Proto_head head;//包头
 	std::string body;//包体
 	std::shared_ptr<std::string> encode();
+	void encode(std::string& buffer);
 	int decode(const std::string& data);
 	Proto_msg();
 	Proto_msg(boost::endian::big_uint8_t _version) :head(_version) {}
