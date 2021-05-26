@@ -1,5 +1,6 @@
 #pragma once
-#include"../proto/Game_proto.h"
+#include"../general_class/Game_proto.h"
+#include "ID_generator.h"
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
 #include <memory>
@@ -13,7 +14,7 @@ using namespace boost::asio;
 class Tcp_connection :public std::enable_shared_from_this<Tcp_connection>
 {
 public:
-	Tcp_connection(io_context& _io, std::shared_ptr<ip::tcp::socket>_sock, std::queue<std::shared_ptr<Proto_msg>>& msg_que, size_t session_id);
+	Tcp_connection(io_context& _io, std::shared_ptr<ip::tcp::socket>_sock, std::queue<std::shared_ptr<Proto_msg>>& msg_que, std::shared_ptr<ID<size_t>> session_id);
 	void run();
 
 	void get_msg_head();
@@ -30,5 +31,5 @@ private:
 	std::queue<std::shared_ptr<Proto_msg>>event_que;
 	std::queue<std::shared_ptr<Proto_msg>>& msg_que;
 	std::string write_buf, read_buf;
-	size_t session_id;
+	std::shared_ptr<ID<size_t>>session_id;
 };

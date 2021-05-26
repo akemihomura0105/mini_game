@@ -24,30 +24,24 @@
     <ClCompile Include="System.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\proto\Game_proto.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="Game_room.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="Game_server.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\state_code\state_code.cpp">
+    <ClCompile Include="..\general_class\Game_proto.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\general_class\state_code.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\proto\Game_proto.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="Game_room.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="predefine.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="..\state_code\state_code.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="System.h">
@@ -57,6 +51,15 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="User.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\general_class\Game_proto.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\general_class\state_code.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="ID_generator.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

@@ -24,10 +24,16 @@
     <ClCompile Include="System.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\proto\Game_proto.cpp">
+    <ClCompile Include="..\general_class\Game_proto.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\state_code\state_code.cpp">
+    <ClCompile Include="..\general_class\state_code.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Otp_table.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Game_server\User.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
@@ -41,10 +47,19 @@
     <ClInclude Include="tools.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\proto\Game_proto.h">
+    <ClInclude Include="..\general_class\Game_proto.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\state_code\state_code.h">
+    <ClInclude Include="..\general_class\state_code.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Otp_table.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Game_server\User.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Room_info.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

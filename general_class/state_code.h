@@ -1,7 +1,7 @@
 #pragma once
 #include<string>
 #include<boost/serialization/serialization.hpp>
-enum  CODE { NONE, LOGIN_SUCCESS, LOGIN_REPEATED };
+enum  CODE { NONE, LOGIN_SUCCESS, LOGIN_REPEATED ,ROOM_REPEATED};
 /*namespace boost
 {
 	namespace serialization

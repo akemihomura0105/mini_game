@@ -147,16 +147,21 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\proto\Game_proto.cpp" />
-    <ClCompile Include="..\state_code\state_code.cpp" />
+    <ClCompile Include="..\Game_server\User.cpp" />
+    <ClCompile Include="..\general_class\Game_proto.cpp" />
+    <ClCompile Include="..\general_class\state_code.cpp" />
     <ClCompile Include="Character.cpp" />
     <ClCompile Include="miniGame.cpp" />
+    <ClCompile Include="Otp_table.cpp" />
     <ClCompile Include="System.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\proto\Game_proto.h" />
-    <ClInclude Include="..\state_code\state_code.h" />
+    <ClInclude Include="..\Game_server\User.h" />
+    <ClInclude Include="..\general_class\Game_proto.h" />
+    <ClInclude Include="..\general_class\state_code.h" />
     <ClInclude Include="Character.h" />
+    <ClInclude Include="Otp_table.h" />
+    <ClInclude Include="Room_info.h" />
     <ClInclude Include="System.h" />
     <ClInclude Include="tools.h" />
   </ItemGroup>
