@@ -1,7 +1,13 @@
+/*
+* ID generator, which is used to generate a globally unique and sequential IDs.
+* To use this generator, construct it with "start" and "limit" which describe the range of ID value.
+* Then, you can use the member function "generate" to generate a ID wrapped by shared_ptr.
+* When the shared_ptr is deleted, the ID would be recycled by the generator.
+*/
+
 #pragma once
 #include<memory>
 #include<queue>
-
 
 template<typename T>
 class ID_generator;
