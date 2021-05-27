@@ -69,9 +69,9 @@ ASYNC_RET System::show_room(std::shared_ptr<Proto_msg> msg)
 	auto req_msg = std::make_shared<Proto_msg>(1, 2);
 	size_t session_id;
 	deserialize_obj(msg->body, session_id);
-	std::vector<Game_room::Room_info>room_vec;
+	std::vector<Game_room::Room_property>room_vec;
 	for (const auto& n : room)
-		room_vec.emplace_back(n.get_room_info());
+		room_vec.emplace_back(n.get_Room_property());
 	serialize_obj(req_msg->body, state_code(), room_vec);
 	session[session_id]->send_msg(req_msg);
 	return ASYNC_RET();
@@ -79,35 +79,74 @@ ASYNC_RET System::show_room(std::shared_ptr<Proto_msg> msg)
 
 ASYNC_RET System::create_room(std::shared_ptr<Proto_msg> msg)
 {
-	auto req_msg = std::make_shared<Proto_msg>(1, 3);
+	auto res_msg = std::make_shared<Proto_msg>(1, 3);
 	size_t session_id;
-	Game_room::Room_info room_info;
-	deserialize_obj(msg->body, session_id, room_info.name, room_info.capacity);
-	std::cerr << "receive a room msg from " << session_id << ", room name is: " << room_info.name << ", room capacity is " << room_info.capacity << "\n";
-	Game_room game_room(std::move(room_info));
-	if (room.find(game_room) != room.end())
-		serialize_obj(req_msg->body, size_t(0));
-	else
-	{
-		game_room.add_user(session_id);
-		room.insert(game_room);
-		serialize_obj(req_msg->body, game_room.get_id());
-	}
-	session[session_id]->send_msg(req_msg);
+	Game_room::Room_property room_property;
+	deserialize_obj(msg->body, session_id, room_property.name, room_property.capacity);
+	std::cerr << "receive a room msg from " << session_id << ", room name is: " << room_property.name << ", room capacity is " << room_property.capacity << "\n";
+	Game_room game_room(std::move(room_property));
+	size_t room_id = game_room.get_id();
+	while (room_id >= room.size())
+		room.push_back(Game_room());
+	room[room_id] = game_room;
+
+	room[room_id].add_user(session_id);
+	serialize_obj(res_msg->body, room_id);
+	session[session_id]->send_msg(res_msg);
 }
 
-ASYNC_RET System::quit_room(std::shared_ptr<Proto_msg> msg)
+ASYNC_RET System::join_room(std::shared_ptr<Proto_msg> msg)
 {
 	size_t session_id;
-	deserialize_obj(msg->body, session_id);
-	const auto& user = session_to_user[session_id];
+	size_t room_id;
+	deserialize_obj(msg->body, session_id, room_id);
+	state_code sc;
+	if (room[room_id].add_user(session_id) == 1)
+		sc.set(CODE::ROOM_FULL);
+	auto res_msg = std::make_shared<Proto_msg>(1, 5);
+	serialize_obj(res_msg->body, sc);
+	session[session_id]->send_msg(res_msg);
+}
 
+ASYNC_RET System::exit_room(std::shared_ptr<Proto_msg> msg)
+{
+	size_t session_id;
+	size_t room_id;
+	deserialize_obj(msg->body, session_id, room_id);
+	int ec = room[room_id].remove_user(session_id);
+	switch (ec)
+	{
+	default:
+		break;
+	case 1:
+		std::cerr << "user not found\n";
+		break;
+	case 2:
+		delete_room(room_id);
+	}
+	auto res_msg = std::make_shared<Proto_msg>(1, 4);
+	serialize_obj(res_msg->body, state_code());
+	session[session_id]->send_msg(res_msg);
+}
 
+ASYNC_RET System::get_room_info(std::shared_ptr<Proto_msg> msg)
+{
+	size_t session_id;
+	size_t room_id;
+	deserialize_obj(msg->body, session_id, room_id);
+	//auto prop = room[room_id].get_Room_property();
+	//auto user = room[room_id].get_Room_user();
+	room[room_id];
+	auto res_msg = std::make_shared<Proto_msg>(1, 6);
+	//serialize_obj(res_msg->body, prop, user);
+	session[session_id]->push_event(res_msg);
 
 }
 
-
-
+void System::delete_room(size_t room_id)
+{
+	return;
+}
 
 ASYNC_RET System::route()
 {
@@ -136,6 +175,20 @@ ASYNC_RET System::route()
 	{
 		create_room(msg);
 		break;
+	}
+	case 4:
+	{
+		exit_room(msg);
+		break;
+	}
+	case 5:
+	{
+		join_room(msg);
+		break;
+	}
+	case 6:
+	{
+
 	}
 	default:
 		std::cerr << "undefined service packet\n";

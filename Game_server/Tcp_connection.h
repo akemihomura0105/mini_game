@@ -22,7 +22,7 @@ public:
 	void push_msg(std::shared_ptr<Proto_msg>proto_ptr, const boost::system::error_code& ec);
 
 	void push_event(std::shared_ptr<Proto_msg>msg_ptr);
-	void send_event();
+	ASYNC_RET send_event(const boost::system::error_code& ec);
 	ASYNC_RET send_msg(std::shared_ptr<Proto_msg>msg_ptr);
 	ASYNC_RET socket_error_handle(const boost::system::error_code& ec);
 private:

@@ -31,6 +31,6 @@ private:
 	void show_room();
 	void join_room();
 	int make_room(int state);
-	int quit_room(int state);
+	int exit_room(int state);
 	void get_ready();
 };

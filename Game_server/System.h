@@ -39,6 +39,8 @@ private:
 	ASYNC_RET show_room(std::shared_ptr<Proto_msg>msg);
 	ASYNC_RET create_room(std::shared_ptr<Proto_msg>msg);
 	ASYNC_RET join_room(std::shared_ptr<Proto_msg>msg);
-	ASYNC_RET quit_room(std::shared_ptr<Proto_msg>msg);
-	std::set<Game_room>room;
+	ASYNC_RET exit_room(std::shared_ptr<Proto_msg>msg);
+	ASYNC_RET get_room_info(std::shared_ptr<Proto_msg>msg);
+	void delete_room(size_t room_id);
+	std::vector<Game_room>room;
 };

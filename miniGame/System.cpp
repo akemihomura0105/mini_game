@@ -91,8 +91,6 @@ int System::make_room(int state = 0)
 	auto res_msg = get_msg();
 	size_t room_id;
 	deserialize_obj(res_msg->body, room_id);
-	if (room_id == 0)
-		std::cout << "房间名已存在\n";
 	Otp_table room_info(3);
 	std::cout << "房间已建立";
 	room_info.insert({ "房间名", "房间号", "房间人数" });
@@ -101,7 +99,7 @@ int System::make_room(int state = 0)
 	system("pause");
 }
 
-int System::quit_room(int state)
+int System::exit_room(int state)
 {
 
 	return 0;

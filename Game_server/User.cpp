@@ -20,6 +20,11 @@ void User::set_id(int n)
 	id = n;
 }
 
+void User::set_room_id(int n)
+{
+	room_id = n;
+}
+
 bool User::operator<(const User& user) const
 {
 	return id < user.id;

@@ -12,6 +12,8 @@ Tcp_connection::Tcp_connection(io_context& _io, std::shared_ptr<ip::tcp::socket>
 void Tcp_connection::run()
 {
 	get_msg_head();
+	boost::system::error_code ec;
+	send_event(ec);
 }
 
 //处理head，从socket中读取一个head大小的数据，并回调body
@@ -56,20 +58,23 @@ void Tcp_connection::push_msg(std::shared_ptr<Proto_msg> proto_ptr, const boost:
 	get_msg_head();
 }
 
-void Tcp_connection::send_event()
+void Tcp_connection::push_event(std::shared_ptr<Proto_msg> msg_ptr)
 {
-	if (event_que.empty())
-	{
-		auto reply_msg = std::make_shared<Proto_msg>(1);
-		reply_msg->head.service = 0;
-		//async_write(*sock, buffer(reply_msg->encode()), bind(Tcp_connection::socket_error_handle, placeholders::error));
-	}
-	else
+	event_que.push(msg_ptr);
+}
+
+ASYNC_RET Tcp_connection::send_event(const boost::system::error_code& ec)
+{
+	if (ec)
+		std::cerr << ec.message() << "\n";
+	if (!event_que.empty())
 	{
 		auto reply_msg = event_que.front();
 		event_que.pop();
-		//async_write(*sock, buffer(reply_msg->encode()), bind(Tcp_connection::socket_error_handle, placeholders::error));
+		reply_msg->encode(write_buf);
+		async_write(*sock, buffer(write_buf, reply_msg->head.len + sizeof(Proto_head)), bind(&Tcp_connection::send_event, shared_from_this(), placeholders::error));
 	}
+	send_event(ec);
 }
 
 ASYNC_RET Tcp_connection::send_msg(std::shared_ptr<Proto_msg> msg_ptr)
