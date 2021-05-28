@@ -34,7 +34,7 @@ public:
 		Room_property();
 	};
 	const Room_property& get_Room_property()const;
-	std::list<size_t> get_Room_user()const;
+	const std::list<size_t>& get_Room_user()const;
 	size_t get_id()const;
 
 	bool operator==(const Game_room& room)const;

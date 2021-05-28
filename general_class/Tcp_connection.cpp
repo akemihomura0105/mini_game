@@ -1,7 +1,7 @@
 #include "Tcp_connection.h"
 
 Tcp_connection::Tcp_connection(io_context& _io, std::shared_ptr<ip::tcp::socket> _sock,
-	std::queue<std::shared_ptr<Proto_msg>>& _msg_que, std::shared_ptr<ID<size_t>> _session_id)
+	std::queue<std::shared_ptr<Proto_msg>>& _msg_que, size_t _session_id)
 	:io(_io), sock(_sock), msg_que(_msg_que), session_id(_session_id)
 {
 	write_buf.resize(65536);
@@ -12,8 +12,8 @@ Tcp_connection::Tcp_connection(io_context& _io, std::shared_ptr<ip::tcp::socket>
 void Tcp_connection::run()
 {
 	get_msg_head();
-	boost::system::error_code ec;
-	send_event(ec);
+	static boost::system::error_code event_ec;
+	send_event(event_ec);
 }
 
 //处理head，从socket中读取一个head大小的数据，并回调body
@@ -74,7 +74,7 @@ ASYNC_RET Tcp_connection::send_event(const boost::system::error_code& ec)
 		reply_msg->encode(write_buf);
 		async_write(*sock, buffer(write_buf, reply_msg->head.len + sizeof(Proto_head)), bind(&Tcp_connection::send_event, shared_from_this(), placeholders::error));
 	}
-	send_event(ec);
+	io.post(bind(&Tcp_connection::send_event, shared_from_this(), ec));
 }
 
 ASYNC_RET Tcp_connection::send_msg(std::shared_ptr<Proto_msg> msg_ptr)

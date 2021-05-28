@@ -1,7 +1,7 @@
 #pragma once
 #include<string>
 #include<boost/serialization/serialization.hpp>
-enum  CODE { NONE, LOGIN_SUCCESS, LOGIN_REPEATED, ROOM_REPEATED, ROOM_FULL };
+enum  CODE { NONE, LOGIN_SUCCESS, LOGIN_REPEATED, ROOM_REPEATED, ROOM_FULL, ROOM_NOT_EXIST };
 /*namespace boost
 {
 	namespace serialization
@@ -28,7 +28,9 @@ public:
 	const std::string& message();
 	bool operator==(const state_code& sc)const;
 	bool operator==(const CODE code)const;
+	bool operator!=(const CODE code)const;
 private:
 	CODE code = CODE::NONE;
+	const static std::string message_def[1000];
 };
 

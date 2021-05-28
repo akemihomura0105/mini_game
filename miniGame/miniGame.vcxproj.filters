@@ -36,6 +36,12 @@
     <ClCompile Include="..\Game_server\User.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="..\general_class\User_info.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\general_class\Tcp_connection.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Character.h">
@@ -60,6 +66,12 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="Room_info.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\general_class\User_info.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\general_class\Tcp_connection.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

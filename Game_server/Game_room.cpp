@@ -39,10 +39,12 @@ const Game_room::Room_property& Game_room::get_Room_property()const
 
 size_t Game_room::get_id() const
 {
+	if (prop.id == nullptr)
+		return 0;
 	return *prop.id;
 }
 
-std::list<size_t> Game_room::get_Room_user() const
+const std::list<size_t>& Game_room::get_Room_user() const
 {
 	return users;
 }

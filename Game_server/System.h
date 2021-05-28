@@ -1,10 +1,9 @@
 #pragma once
 #include "User.h"
 #include "Game_room.h"
-#include "predefine.h"
 #include "ID_generator.h"
 #include "../general_class/Game_proto.h"
-#include "Tcp_connection.h"
+#include "../general_class/Tcp_connection.h"
 #include "../general_class/state_code.h"
 #include <random>
 #include <boost/asio.hpp>
@@ -29,6 +28,7 @@ private:
 	ip::tcp::acceptor acp;
 
 	ID_generator<size_t>session_gen;
+	std::map <size_t, std::shared_ptr<ID<size_t>>>session_register;
 	std::vector<std::shared_ptr<Tcp_connection>>session;
 	std::queue<std::shared_ptr<Proto_msg>>msg_que;
 	std::unordered_map<User, size_t>user_to_session;//key:session_id, value:User
@@ -41,6 +41,7 @@ private:
 	ASYNC_RET join_room(std::shared_ptr<Proto_msg>msg);
 	ASYNC_RET exit_room(std::shared_ptr<Proto_msg>msg);
 	ASYNC_RET get_room_info(std::shared_ptr<Proto_msg>msg);
+	void broadcast_event_in_room(size_t room_id, std::shared_ptr<Proto_msg>msg);
 	void delete_room(size_t room_id);
 	std::vector<Game_room>room;
 };

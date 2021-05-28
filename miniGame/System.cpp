@@ -1,4 +1,5 @@
 #include "System.h"
+#include "System.h"
 #include "tools.h"
 #include <array>
 
@@ -54,6 +55,42 @@ boost::system::error_code System::send_msg(Proto_msg msg)
 	return ec;
 }
 
+void System::show_room()
+{
+	Proto_msg req_msg(1, 2);
+	serialize_obj(req_msg.body, session_id);
+	auto res_msg = get_msg();
+	std::vector<Room_info>info_vec;
+	deserialize_obj(res_msg->body, info_vec);
+	Otp_table room_info(4);
+	room_info.insert({ "房间名","房间号","房间人数" });
+	for (const auto& info : info_vec)
+		room_info.insert({ info.name,std::to_string(info.id),std::to_string(info.size) + "/" + std::to_string(info.capacity) });
+	std::cout << room_info;
+}
+
+int System::join_room(int state)
+{
+	Proto_msg req_msg(1, 5);
+	std::cout << "请输入加入房间的房间号：\n";
+	size_t room_id;
+	std::cin >> room_id;
+	serialize_obj(req_msg.body, session_id, room_id);
+	send_msg(req_msg);
+
+	auto res_msg = get_msg();
+	state_code sc;
+	deserialize_obj(res_msg->body, sc);
+	if (sc != CODE::NONE)
+	{
+		std::cout << sc.message();
+		return join_room(0);
+	}
+	std::cout << "成功加入房间\n";
+	this->room_id = room_id;
+	room_system_run();
+}
+
 int System::make_room(int state = 0)
 {
 	const std::string please_input_std_format = "请按正确格式输入,如：\n my room name+6\n";
@@ -101,7 +138,6 @@ int System::make_room(int state = 0)
 
 int System::exit_room(int state)
 {
-
 	return 0;
 }
 
@@ -111,6 +147,7 @@ void System::run()
 	auto msg = get_msg();
 	deserialize_obj(msg->body, session_id);
 	std::cout << "建立了会话：" << session_id << std::endl;
+	conn = std::make_shared<Tcp_connection>(io, sock, msg_que, session_id);
 	while (login())
 	{
 		//do something
@@ -127,30 +164,32 @@ void System::run()
 	std::string str;
 	std::cin >> str;
 	if (str == "ls")
-	{
-		Proto_msg req_msg(1, 2);
-		serialize_obj(req_msg.body, session_id);
-		auto res_msg = get_msg();
-		std::vector<Room_info>info_vec;
-		deserialize_obj(res_msg->body, info_vec);
-		Otp_table room_info(4);
-		room_info.insert({ "房间名","房间号","房间人数" });
-		for (const auto& info : info_vec)
-			room_info.insert({ info.name,std::to_string(info.id),std::to_string(info.size) + "/" + std::to_string(info.capacity) });
-		std::cout << room_info;
-	}
+		show_room();
 	if (str == "mk")
-	{
 		make_room();
-	}
 	if (str == "cd")
-	{
-	}
-
-
+		join_room(0);
 	system("pause");
-
 }
+
+ASYNC_RET System::route()
+{
+	if (msg_que.empty())
+	{
+		io.post(bind(&System::route, shared_from_this()));
+		return;
+	}
+	std::shared_ptr<Proto_msg> msg = msg_que.front();
+	msg_que.pop();
+	std::cout << msg->head.service << std::endl;
+}
+
+void System::room_system_run()
+{
+	conn->run();
+}
+
+
 
 System::System(io_context& _io, ip::tcp::endpoint& _ep) :io(_io), ep(_ep)
 {

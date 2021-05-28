@@ -21,7 +21,8 @@ void System::accept_handler(std::shared_ptr<ip::tcp::socket>sock, const boost::s
 	{
 		std::shared_ptr<Tcp_connection>conn;
 		auto session_id = session_gen.generate();
-		conn = std::make_shared<Tcp_connection>(io, sock, msg_que, session_id);
+		session_register[*session_id] = session_id;
+		conn = std::make_shared<Tcp_connection>(io, sock, msg_que, *session_id);
 		if (session.size() <= *session_id)
 			session.push_back(conn);
 		else
@@ -30,7 +31,7 @@ void System::accept_handler(std::shared_ptr<ip::tcp::socket>sock, const boost::s
 		io.post(bind(&Tcp_connection::run, conn));
 		auto msg = std::make_shared<Proto_msg>(1, 1);
 		serialize_obj(msg->body, size_t(*session_id));
-		io.post(bind(&Tcp_connection::send_msg, conn, msg));
+		conn->send_msg(msg);
 	}
 	std::cerr << "成功运行accept_handle\n";
 	auto new_sock = std::make_shared<ip::tcp::socket>(io);
@@ -101,9 +102,12 @@ ASYNC_RET System::join_room(std::shared_ptr<Proto_msg> msg)
 	size_t room_id;
 	deserialize_obj(msg->body, session_id, room_id);
 	state_code sc;
-	if (room[room_id].add_user(session_id) == 1)
-		sc.set(CODE::ROOM_FULL);
 	auto res_msg = std::make_shared<Proto_msg>(1, 5);
+	if (room_id >= room.size() || room[room_id].get_id() == 0)
+		sc.set(CODE::ROOM_NOT_EXIST);
+	else
+		if (room[room_id].add_user(session_id) == 1)
+			sc.set(CODE::ROOM_FULL);
 	serialize_obj(res_msg->body, sc);
 	session[session_id]->send_msg(res_msg);
 }
@@ -141,6 +145,13 @@ ASYNC_RET System::get_room_info(std::shared_ptr<Proto_msg> msg)
 	//serialize_obj(res_msg->body, prop, user);
 	session[session_id]->push_event(res_msg);
 
+}
+
+void System::broadcast_event_in_room(size_t room_id, std::shared_ptr<Proto_msg> msg)
+{
+	const auto& users = room[room_id].get_Room_user();
+	for (const auto& n : users)
+		session[n]->push_event(msg);
 }
 
 void System::delete_room(size_t room_id)

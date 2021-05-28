@@ -15,9 +15,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Tcp_connection.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="User.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -36,18 +33,18 @@
     <ClCompile Include="..\general_class\state_code.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="..\general_class\User_info.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\general_class\Tcp_connection.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Game_room.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="predefine.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="System.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="Tcp_connection.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="User.h">
@@ -60,6 +57,12 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="ID_generator.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\general_class\User_info.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\general_class\Tcp_connection.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
