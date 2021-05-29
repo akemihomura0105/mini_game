@@ -1,7 +1,8 @@
 #include "User.h"
 
-int User::load_user(std::string username, std::string password)
+int User::load_user(const std::string& _username, const std::string& _password)
 {
+	username = _username;
 	//Unrealized database operations. After these operations, the user info should be loaded into the object.
 	//The following code will be used for bypass testing and will bypass all database related operations.
 	//Begin
@@ -33,4 +34,9 @@ bool User::operator<(const User& user) const
 bool User::operator==(const User& user) const
 {
 	return get_username() == user.get_username();
+}
+
+bool User::is_ready()const
+{
+	return ready;
 }

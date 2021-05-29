@@ -74,7 +74,8 @@ ASYNC_RET Tcp_connection::send_event(const boost::system::error_code& ec)
 		reply_msg->encode(write_buf);
 		async_write(*sock, buffer(write_buf, reply_msg->head.len + sizeof(Proto_head)), bind(&Tcp_connection::send_event, shared_from_this(), placeholders::error));
 	}
-	io.post(bind(&Tcp_connection::send_event, shared_from_this(), ec));
+	else
+		io.post(bind(&Tcp_connection::send_event, shared_from_this(), ec));
 }
 
 ASYNC_RET Tcp_connection::send_msg(std::shared_ptr<Proto_msg> msg_ptr)

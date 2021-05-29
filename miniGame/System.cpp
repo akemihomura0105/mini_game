@@ -1,5 +1,4 @@
 #include "System.h"
-#include "System.h"
 #include "tools.h"
 #include <array>
 
@@ -59,10 +58,13 @@ void System::show_room()
 {
 	Proto_msg req_msg(1, 2);
 	serialize_obj(req_msg.body, session_id);
+	send_msg(req_msg);
 	auto res_msg = get_msg();
-	std::vector<Room_info>info_vec;
-	deserialize_obj(res_msg->body, info_vec);
-	Otp_table room_info(4);
+	std::vector<Room_prop>info_vec;
+	state_code sc;
+	std::cerr << res_msg->body << std::endl;
+	deserialize_obj(res_msg->body, sc, info_vec);
+	Otp_table room_info(3);
 	room_info.insert({ "房间名","房间号","房间人数" });
 	for (const auto& info : info_vec)
 		room_info.insert({ info.name,std::to_string(info.id),std::to_string(info.size) + "/" + std::to_string(info.capacity) });
@@ -133,7 +135,7 @@ int System::make_room(int state = 0)
 	room_info.insert({ "房间名", "房间号", "房间人数" });
 	room_info.insert({ name,std::to_string(room_id),"1/" + std::to_string(capacity) });
 	std::cout << room_info;
-	system("pause");
+	room_system_run();
 }
 
 int System::exit_room(int state)
@@ -155,21 +157,30 @@ void System::run()
 	}
 	std::cout << "login successfully" << std::endl;
 
-	Otp_table main_screen(2);
-	main_screen.insert({ "显示所有房间" ,"ls" });
-	main_screen.insert({ "创建某个房间" ,"mk" });
-	main_screen.insert({ "进入某个房间" ,"cd" });
-	std::cout << main_screen;
+	while (true)
+	{
+		Otp_table main_screen(2);
+		main_screen.insert({ "显示所有房间" ,"ls" });
+		main_screen.insert({ "创建某个房间" ,"mk" });
+		main_screen.insert({ "进入某个房间" ,"cd" });
+		std::cout << main_screen;
 
-	std::string str;
-	std::cin >> str;
-	if (str == "ls")
-		show_room();
-	if (str == "mk")
-		make_room();
-	if (str == "cd")
-		join_room(0);
-	system("pause");
+		std::string str;
+		std::cin >> str;
+		if (str == "ls")
+			show_room();
+		if (str == "mk")
+		{
+			make_room();
+			break;
+		}
+		if (str == "cd")
+		{
+			join_room(0);
+			break;
+		}
+		system("pause");
+	}
 }
 
 ASYNC_RET System::route()
@@ -182,14 +193,37 @@ ASYNC_RET System::route()
 	std::shared_ptr<Proto_msg> msg = msg_que.front();
 	msg_que.pop();
 	std::cout << msg->head.service << std::endl;
+	switch (msg->head.service)
+	{
+	case 6:
+	{
+		update_room_info(msg);
+		break;
+	}
+	}
+	io.post(bind(&System::route, shared_from_this()));
 }
 
 void System::room_system_run()
 {
 	conn->run();
+	io.post(bind(&System::route, shared_from_this()));
 }
 
-
+void System::update_room_info(std::shared_ptr<Proto_msg>msg)
+{
+	Room_info info;
+	deserialize_obj(msg->body, info);
+	Otp_table prop_table(3);
+	prop_table.insert({ "名称","房间号","容量" });
+	prop_table.insert({ info.name,std::to_string(info.room_id),std::to_string(info.user.size()) + "/" + std::to_string(info.capacity) });
+	info.user;
+	Otp_table user_table(2);
+	user_table.insert({ "用户名","准备状态" });
+	for (const auto& n : info.user)
+		user_table.insert({ n.name, (n.ready ? "已准备" : "未准备") });
+	std::cout << prop_table << user_table;
+}
 
 System::System(io_context& _io, ip::tcp::endpoint& _ep) :io(_io), ep(_ep)
 {

@@ -5,6 +5,7 @@
 #include "../general_class/Game_proto.h"
 #include "../general_class/Tcp_connection.h"
 #include "../general_class/state_code.h"
+#include "../general_class/Room_info.h"
 #include <random>
 #include <boost/asio.hpp>
 #include <string>
@@ -31,8 +32,8 @@ private:
 	std::map <size_t, std::shared_ptr<ID<size_t>>>session_register;
 	std::vector<std::shared_ptr<Tcp_connection>>session;
 	std::queue<std::shared_ptr<Proto_msg>>msg_que;
-	std::unordered_map<User, size_t>user_to_session;//key:session_id, value:User
-	std::unordered_map<size_t, User>session_to_user;
+	std::unordered_map<std::string, size_t>username_to_session;//key:session_id, value:User
+	std::vector<std::shared_ptr<User>>session_to_user;
 
 	ASYNC_RET login(std::shared_ptr<Proto_msg>msg);
 
@@ -40,7 +41,7 @@ private:
 	ASYNC_RET create_room(std::shared_ptr<Proto_msg>msg);
 	ASYNC_RET join_room(std::shared_ptr<Proto_msg>msg);
 	ASYNC_RET exit_room(std::shared_ptr<Proto_msg>msg);
-	ASYNC_RET get_room_info(std::shared_ptr<Proto_msg>msg);
+	void broadcast_room_info(size_t room_id);
 	void broadcast_event_in_room(size_t room_id, std::shared_ptr<Proto_msg>msg);
 	void delete_room(size_t room_id);
 	std::vector<Game_room>room;

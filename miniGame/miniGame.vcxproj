@@ -160,12 +160,12 @@
   <ItemGroup>
     <ClInclude Include="..\Game_server\User.h" />
     <ClInclude Include="..\general_class\Game_proto.h" />
+    <ClInclude Include="..\general_class\Room_info.h" />
     <ClInclude Include="..\general_class\state_code.h" />
     <ClInclude Include="..\general_class\Tcp_connection.h" />
     <ClInclude Include="..\general_class\User_info.h" />
     <ClInclude Include="Character.h" />
     <ClInclude Include="Otp_table.h" />
-    <ClInclude Include="Room_info.h" />
     <ClInclude Include="System.h" />
     <ClInclude Include="tools.h" />
   </ItemGroup>

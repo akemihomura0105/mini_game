@@ -2,7 +2,11 @@
 
 ID_generator<size_t> Game_room::room_gen(1, 1000);
 
-Game_room::Room_property::Room_property() { id = room_gen.generate(); }
+Game_room::Room_property::Room_property(bool init)
+{
+	if (init)
+		id = room_gen.generate();
+}
 
 /*
 * return 0: add normally

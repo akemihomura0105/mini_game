@@ -28,10 +28,10 @@ public:
 			ar& capacity;
 		}
 		std::string name;
-		std::shared_ptr<ID<size_t>> id;
+		std::shared_ptr<ID<size_t>> id = nullptr;
 		size_t size;
 		size_t capacity;
-		Room_property();
+		Room_property(bool init = false);
 	};
 	const Room_property& get_Room_property()const;
 	const std::list<size_t>& get_Room_user()const;

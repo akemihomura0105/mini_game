@@ -65,13 +65,13 @@
     <ClInclude Include="..\Game_server\User.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="Room_info.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="..\general_class\User_info.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="..\general_class\Tcp_connection.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\general_class\Room_info.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

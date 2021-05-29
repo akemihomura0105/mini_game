@@ -6,9 +6,6 @@ class Actionable_character
 	int bandage;
 	int coin;
 	int id;
-
-	
-
 public:
 	void get_damage();
 	void attack();

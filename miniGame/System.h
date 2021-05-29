@@ -12,9 +12,8 @@
 #include "../general_class/state_code.h"
 #include "../general_class/User_info.h"
 #include "Otp_table.h"
-//#include "../Game_server/Game_room.h"
-#include "Room_info.h"
 #include "../general_class/Tcp_connection.h"
+#include "../general_class/Room_info.h"
 #include <queue>
 
 using namespace boost::asio;
@@ -47,6 +46,7 @@ private:
 
 
 	void room_system_run();
+	void update_room_info(std::shared_ptr<Proto_msg>msg);
 	ASYNC_RET route();
 	void get_ready();
 };
