@@ -15,6 +15,7 @@ public:
 	bool operator <(const User& user)const;
 	bool operator == (const User& user)const;
 	bool is_ready()const;
+	void set_ready();
 private:
 	std::string username;
 	size_t id;

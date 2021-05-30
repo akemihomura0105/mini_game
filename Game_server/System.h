@@ -8,6 +8,8 @@
 #include "../general_class/Room_info.h"
 #include <random>
 #include <boost/asio.hpp>
+#include <thread>
+#include <mutex>
 #include <string>
 #include <set>
 #include <queue>
@@ -41,6 +43,10 @@ private:
 	ASYNC_RET create_room(std::shared_ptr<Proto_msg>msg);
 	ASYNC_RET join_room(std::shared_ptr<Proto_msg>msg);
 	ASYNC_RET exit_room(std::shared_ptr<Proto_msg>msg);
+
+	void set_ready(std::shared_ptr<Proto_msg>msg);
+	void start_game(std::shared_ptr<Proto_msg>msg);
+
 	void broadcast_room_info(size_t room_id);
 	void broadcast_event_in_room(size_t room_id, std::shared_ptr<Proto_msg>msg);
 	void delete_room(size_t room_id);

@@ -36,6 +36,16 @@ int Game_room::remove_user(size_t session_id)
 	return 0;
 }
 
+int Game_room::start_game()
+{
+	return 0;
+}
+
+size_t Game_room::get_homeowner()
+{
+	return users.front();
+}
+
 const Game_room::Room_property& Game_room::get_Room_property()const
 {
 	return prop;

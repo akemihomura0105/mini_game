@@ -74,6 +74,9 @@
     <ClInclude Include="..\general_class\Room_info.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="threadsafe_queue.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="cpp.hint" />

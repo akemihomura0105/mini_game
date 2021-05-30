@@ -40,3 +40,8 @@ bool User::is_ready()const
 {
 	return ready;
 }
+
+void User::set_ready()
+{
+	ready = !ready;
+}

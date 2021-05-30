@@ -3,7 +3,7 @@
 
 Proto_head::Proto_head() { memset(this, 0, sizeof(Proto_head)); }
 Proto_head::Proto_head(uint16_t _version) :version(_version) {}
-Proto_head::Proto_head(uint16_t _version, uint16_t _service) : version(_version), service(_service) {}
+Proto_head::Proto_head(uint16_t _version, uint16_t _service) : version(_version), service(_service) { len = 0; }
 
 
 std::shared_ptr<std::string> Proto_msg::encode()

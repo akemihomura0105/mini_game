@@ -14,6 +14,7 @@
 #include "Otp_table.h"
 #include "../general_class/Tcp_connection.h"
 #include "../general_class/Room_info.h"
+#include "threadsafe_queue.h"
 #include <queue>
 
 using namespace boost::asio;
@@ -42,11 +43,22 @@ private:
 	void show_room();
 	int join_room(int state);
 	int make_room(int state);
-	int exit_room(int state);
+	void exit_room();
 
 
+	enum class STATE { HALL, ROOM, GAME };
+	STATE state;
+	threadsafe_queue<std::string>input_que;
+	void otp_room_operation();
+	void hall_system_run();
 	void room_system_run();
 	void update_room_info(std::shared_ptr<Proto_msg>msg);
+
+	void read_input();
+
+	void set_ready();
+	void start_game();
+
 	ASYNC_RET route();
-	void get_ready();
+	ASYNC_RET message_route();
 };

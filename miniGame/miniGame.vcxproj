@@ -167,6 +167,7 @@
     <ClInclude Include="Character.h" />
     <ClInclude Include="Otp_table.h" />
     <ClInclude Include="System.h" />
+    <ClInclude Include="threadsafe_queue.h" />
     <ClInclude Include="tools.h" />
   </ItemGroup>
   <ItemGroup>

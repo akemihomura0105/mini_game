@@ -1,7 +1,7 @@
 #pragma once
 #include<string>
 #include<boost/serialization/serialization.hpp>
-enum  CODE { NONE, LOGIN_SUCCESS, LOGIN_REPEATED, ROOM_REPEATED, ROOM_FULL, ROOM_NOT_EXIST };
+enum  CODE { NONE, LOGIN_SUCCESS, LOGIN_REPEATED, ROOM_REPEATED, ROOM_FULL, ROOM_NOT_EXIST, NOT_HOME_OWNER, NOT_READY };
 /*namespace boost
 {
 	namespace serialization

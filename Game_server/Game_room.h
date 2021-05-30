@@ -14,7 +14,8 @@ class Game_room
 public:
 	int add_user(size_t session_id);
 	int remove_user(size_t session_id);
-	int game_start();
+	int start_game();
+	size_t get_homeowner();
 
 	struct Room_property
 	{
