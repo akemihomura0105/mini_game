@@ -21,9 +21,14 @@ void User::set_id(int n)
 	id = n;
 }
 
-void User::set_room_id(int n)
+void User::set_room_id(size_t _room_id)
 {
-	room_id = n;
+	room_id = _room_id;
+}
+
+size_t User::get_room_id()
+{
+	return room_id;
 }
 
 bool User::operator<(const User& user) const

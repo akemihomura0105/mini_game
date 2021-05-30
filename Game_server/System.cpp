@@ -11,6 +11,26 @@ void System::run()
 	io.post(bind(&System::route, shared_from_this()));
 }
 
+void System::close(std::shared_ptr<Proto_msg>msg)
+{
+	size_t session_id;
+	deserialize_obj(msg->body, session_id);
+	//release tcp connection
+	session[session_id].reset();
+	if (session_to_user.size() > session_id && session_to_user[session_id] != nullptr)
+	{
+
+		auto user = session_to_user[session_id];
+		//release from room
+		if (user->get_room_id())
+			room[user->get_room_id()].remove_user(session_id, user);
+		//release from user
+		session_to_user[session_id].reset();
+	}
+	//release from session
+	session_register.erase(session_id);
+}
+
 void System::accept_handler(std::shared_ptr<ip::tcp::socket>sock, const boost::system::error_code& ec)
 {
 	if (ec)
@@ -97,7 +117,7 @@ void System::create_room(std::shared_ptr<Proto_msg> msg)
 		room.push_back(Game_room());
 	room[room_id] = game_room;
 
-	room[room_id].add_user(session_id);
+	room[room_id].add_user(session_id, session_to_user[session_id]);
 	serialize_obj(res_msg->body, room_id);
 	session[session_id]->push_event(res_msg);
 	broadcast_room_info(room_id);
@@ -113,7 +133,7 @@ void System::join_room(std::shared_ptr<Proto_msg> msg)
 	if (room_id >= room.size() || room[room_id].get_id() == 0)
 		sc.set(CODE::ROOM_NOT_EXIST);
 	else
-		if (room[room_id].add_user(session_id) == 1)
+		if (room[room_id].add_user(session_id, session_to_user[session_id]) == 1)
 			sc.set(CODE::ROOM_FULL);
 	serialize_obj(res_msg->body, sc);
 	session[session_id]->push_event(res_msg);
@@ -125,7 +145,7 @@ void System::exit_room(std::shared_ptr<Proto_msg> msg)
 	size_t session_id;
 	size_t room_id;
 	deserialize_obj(msg->body, session_id, room_id);
-	int ec = room[room_id].remove_user(session_id);
+	int ec = room[room_id].remove_user(session_id, session_to_user[session_id]);
 	switch (ec)
 	{
 	default:
@@ -241,6 +261,11 @@ ASYNC_RET System::route()
 	case 7:
 	{
 		set_ready(msg);
+		break;
+	}
+	case 50000:
+	{
+		close(msg);
 		break;
 	}
 

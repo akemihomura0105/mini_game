@@ -12,11 +12,12 @@ Game_room::Room_property::Room_property(bool init)
 * return 0: add normally
 * return 1: full room
 */
-int Game_room::add_user(size_t session_id)
+int Game_room::add_user(size_t session_id, std::shared_ptr <User> _user)
 {
 	if (users.size() == prop.capacity)
 		return 1;
 	users.push_back(session_id);
+	_user->set_room_id(get_id());
 	return 0;
 }
 
@@ -25,7 +26,7 @@ int Game_room::add_user(size_t session_id)
 * return 1: users not found;
 * return 2: empty room, should be deleted by system.
 */
-int Game_room::remove_user(size_t session_id)
+int Game_room::remove_user(size_t session_id, std::shared_ptr<User> _user)
 {
 	auto ite = std::find(users.begin(), users.end(), session_id);
 	if (ite == users.end())
@@ -33,6 +34,7 @@ int Game_room::remove_user(size_t session_id)
 	users.erase(ite);
 	if (users.empty())
 		return 2;
+	_user->set_room_id(0);
 	return 0;
 }
 

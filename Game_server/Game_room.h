@@ -12,8 +12,8 @@ class Game_room
 {
 	friend class Room_property;
 public:
-	int add_user(size_t session_id);
-	int remove_user(size_t session_id);
+	int add_user(size_t session_id, std::shared_ptr<User> user);
+	int remove_user(size_t session_id, std::shared_ptr<User> user);
 	int start_game();
 	size_t get_homeowner();
 

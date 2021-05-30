@@ -11,7 +11,8 @@ public:
 	int load_user(const std::string& username, const std::string& password = "");
 	const std::string& get_username()const;
 	void set_id(int n);
-	void set_room_id(int n);
+	void set_room_id(size_t room_id);
+	size_t get_room_id();
 	bool operator <(const User& user)const;
 	bool operator == (const User& user)const;
 	bool is_ready()const;

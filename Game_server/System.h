@@ -21,6 +21,7 @@ class System :public std::enable_shared_from_this<System>
 {
 public:
 	void run();
+	void close(std::shared_ptr<Proto_msg>msg);
 	ASYNC_RET accept_handler(std::shared_ptr<ip::tcp::socket>sock, const boost::system::error_code& ec);
 
 	ASYNC_RET route();

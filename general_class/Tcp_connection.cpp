@@ -21,16 +21,20 @@ void Tcp_connection::pause()
 	pause_flag = true;
 }
 
+void Tcp_connection::close()
+{
+	auto msg = std::make_shared<Proto_msg>(1, 50000);
+	boost::system::error_code ec;
+	serialize_obj(msg->body, session_id);
+	push_msg(msg, ec);
+}
+
 //处理head，从socket中读取一个head大小的数据，并回调body
 void Tcp_connection::get_msg_head()
 {
 	if (pause_flag)
 		return;
 	auto proto_ptr = std::make_shared<Proto_msg>();
-	/*read(*sock, buffer(&proto_ptr->head, sizeof(Proto_head)));
-	for (int i = 0; i < sizeof(Proto_head); i++)
-		std::cout << (int)*((char*)&proto_ptr->head + i) << " ";
-	std::cout << std::endl << proto_ptr->head.len;*/
 	async_read(*sock,
 		buffer(&proto_ptr->head, sizeof(Proto_head)),
 		bind(&Tcp_connection::get_msg_body, shared_from_this(), proto_ptr, placeholders::error));
@@ -39,10 +43,8 @@ void Tcp_connection::get_msg_head()
 //处理body，判断魔数校验，并将最后的结果交由push_msg函数。
 void Tcp_connection::get_msg_body(std::shared_ptr<Proto_msg> proto_ptr, const boost::system::error_code& ec)
 {
-	if (ec)
-	{
-		std::cerr << ec.message();
-	}
+	if (socket_error_solve(ec))
+		return;
 	if (!proto_ptr->head.magic != PROTO_MAGIC)
 	{
 		//do something
@@ -58,10 +60,8 @@ void Tcp_connection::get_msg_body(std::shared_ptr<Proto_msg> proto_ptr, const bo
 //将处理成功的包发送至路由缓冲区
 void Tcp_connection::push_msg(std::shared_ptr<Proto_msg> proto_ptr, const boost::system::error_code& ec)
 {
-	if (ec)
-	{
-		std::cerr << ec.message();
-	}
+	if (socket_error_solve(ec))
+		return;
 	std::cerr << "service_id: " << proto_ptr->head.service << "\tlen：" << proto_ptr->head.len << std::endl;
 	msg_que.push(proto_ptr);
 	get_msg_head();
@@ -77,8 +77,8 @@ ASYNC_RET Tcp_connection::send_event(const boost::system::error_code& ec)
 {
 	if (pause_flag)
 		return;
-	if (ec)
-		std::cerr << ec.message() << "\n";
+	if (socket_error_solve(ec))
+		return;
 	if (!event_que.empty())
 	{
 		auto reply_msg = event_que.front();
@@ -98,8 +98,25 @@ ASYNC_RET Tcp_connection::send_msg(std::shared_ptr<Proto_msg> msg_ptr)
 	async_write(*sock, buffer(write_buf, msg_ptr->head.len + sizeof(Proto_head)), bind(&Tcp_connection::socket_error_handle, shared_from_this(), placeholders::error));
 }
 
-ASYNC_RET Tcp_connection::socket_error_handle(const boost::system::error_code& ec)
+bool Tcp_connection::socket_error_solve(const boost::system::error_code& ec)
 {
 	if (ec)
+	{
 		std::cerr << ec.message();
+		pause();
+		sock->close();
+		close();
+		return true;
+	}
+	return false;
+}
+
+void Tcp_connection::socket_error_handle(const boost::system::error_code& ec)
+{
+	if (ec)
+	{
+		std::cerr << ec.message();
+		sock->close();
+		close();
+	}
 }
