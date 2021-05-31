@@ -149,6 +149,7 @@
     <ClCompile Include="..\general_class\Tcp_connection.cpp" />
     <ClCompile Include="..\general_class\User_info.cpp" />
     <ClCompile Include="Character.cpp" />
+    <ClCompile Include="Character_factory.cpp" />
     <ClCompile Include="Game_room.cpp" />
     <ClCompile Include="Game_server.cpp" />
     <ClCompile Include="System.cpp" />
@@ -161,6 +162,7 @@
     <ClInclude Include="..\general_class\Tcp_connection.h" />
     <ClInclude Include="..\general_class\User_info.h" />
     <ClInclude Include="Character.h" />
+    <ClInclude Include="Character_factory.h" />
     <ClInclude Include="Game_room.h" />
     <ClInclude Include="ID_generator.h" />
     <ClInclude Include="System.h" />

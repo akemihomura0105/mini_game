@@ -9,18 +9,18 @@ public:
 	state_code treasure_hunt(bool try_flag = false);
 	state_code move(int target_location, bool try_flag = false);
 	virtual state_code heal(Actionable_character& character, bool try_flag = false);
-	state_code try_buy();
+	//state_code try_buy();
 	virtual void next_turn();
-	virtual void next_day();
+	//virtual void next_day();
 private:
 	int HP;
 	int armo;
 	int bandage;
 	int coin;
-	int location;
+	int location = 0;
 	int session_id;
-	bool action_flag;
-	bool alive_flag;
+	bool action_flag = true;
+	bool alive_flag = true;
 };
 
 class Treasure_hunter :public Actionable_character

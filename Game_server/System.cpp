@@ -13,7 +13,7 @@ void System::run()
 
 void System::close(std::shared_ptr<Proto_msg>msg)
 {
-	size_t session_id;
+	int session_id;
 	deserialize_obj(msg->body, session_id);
 	//release tcp connection
 	session[session_id].reset();
@@ -50,7 +50,7 @@ void System::accept_handler(std::shared_ptr<ip::tcp::socket>sock, const boost::s
 
 		io.post(bind(&Tcp_connection::run, conn));
 		auto msg = std::make_shared<Proto_msg>(1, 1);
-		serialize_obj(msg->body, size_t(*session_id));
+		serialize_obj(msg->body, int(*session_id));
 		conn->push_event(msg);
 	}
 	std::cerr << "成功运行accept_handle\n";
@@ -60,7 +60,7 @@ void System::accept_handler(std::shared_ptr<ip::tcp::socket>sock, const boost::s
 
 ASYNC_RET System::login(std::shared_ptr<Proto_msg>msg)
 {
-	size_t session_id;
+	int session_id;
 	std::string username, password;
 	deserialize_obj(msg->body, session_id, username);
 	auto user = std::make_shared<User>();
@@ -91,7 +91,7 @@ ASYNC_RET System::login(std::shared_ptr<Proto_msg>msg)
 ASYNC_RET System::show_room(std::shared_ptr<Proto_msg> msg)
 {
 	auto res_msg = std::make_shared<Proto_msg>(1, 2);
-	size_t session_id;
+	int session_id;
 	deserialize_obj(msg->body, session_id);
 	std::vector<Game_room::Room_property>room_vec;
 	for (const auto& n : room)
@@ -106,13 +106,13 @@ ASYNC_RET System::show_room(std::shared_ptr<Proto_msg> msg)
 void System::create_room(std::shared_ptr<Proto_msg> msg)
 {
 	auto res_msg = std::make_shared<Proto_msg>(1, 3);
-	size_t session_id;
+	int session_id;
 	Game_room::Room_property room_property(true);
 	deserialize_obj(msg->body, session_id, room_property.name, room_property.capacity);
 	room_property.size = 1;
 	std::cerr << "receive a room msg from " << session_id << ", room name is: " << room_property.name << ", room capacity is " << room_property.capacity << "\n";
 	Game_room game_room(std::move(room_property));
-	size_t room_id = game_room.get_id();
+	int room_id = game_room.get_id();
 	while (room_id >= room.size())
 		room.push_back(Game_room());
 	room[room_id] = game_room;
@@ -125,8 +125,8 @@ void System::create_room(std::shared_ptr<Proto_msg> msg)
 
 void System::join_room(std::shared_ptr<Proto_msg> msg)
 {
-	size_t session_id;
-	size_t room_id;
+	int session_id;
+	int room_id;
 	deserialize_obj(msg->body, session_id, room_id);
 	state_code sc;
 	auto res_msg = std::make_shared<Proto_msg>(1, 5);
@@ -142,8 +142,8 @@ void System::join_room(std::shared_ptr<Proto_msg> msg)
 
 void System::exit_room(std::shared_ptr<Proto_msg> msg)
 {
-	size_t session_id;
-	size_t room_id;
+	int session_id;
+	int room_id;
 	deserialize_obj(msg->body, session_id, room_id);
 	int ec = room[room_id].remove_user(session_id, session_to_user[session_id]);
 	switch (ec)
@@ -164,7 +164,7 @@ void System::exit_room(std::shared_ptr<Proto_msg> msg)
 
 void System::set_ready(std::shared_ptr<Proto_msg> msg)
 {
-	size_t session_id, room_id;
+	int session_id, room_id;
 	deserialize_obj(msg->body, session_id, room_id);
 	session_to_user[session_id]->set_ready();
 	broadcast_room_info(room_id);
@@ -172,7 +172,7 @@ void System::set_ready(std::shared_ptr<Proto_msg> msg)
 
 void System::start_game(std::shared_ptr<Proto_msg> msg)
 {
-	size_t session_id, room_id;
+	int session_id, room_id;
 	deserialize_obj(msg->body, session_id, room_id);
 	const auto& user = room[room_id].get_Room_user();
 	if (user.size() != room[room_id].get_Room_property().capacity
@@ -181,11 +181,23 @@ void System::start_game(std::shared_ptr<Proto_msg> msg)
 	for (auto n : user)
 		if (!session_to_user[n]->is_ready())
 			return;
+	room[room_id].start_game();
 	auto res_msg = std::make_shared<Proto_msg>(1, 10);
 	broadcast_event_in_room(room_id, res_msg);
 }
 
-void System::broadcast_room_info(size_t room_id)
+void System::listen_room(int room_id)
+{
+	while (room[room_id].listen())
+	{
+		auto pair = room[room_id].msg_pop();
+		session[pair.first]->push_event(pair.second);
+	}
+	io.post(boost::bind(System::listen_room, shared_from_this(), room_id));
+}
+
+
+void System::broadcast_room_info(int room_id)
 {
 	Room_info info;
 	const auto& prop = room[room_id].get_Room_property();
@@ -193,7 +205,7 @@ void System::broadcast_room_info(size_t room_id)
 	info.name = prop.name;
 	info.room_id = room_id;
 	const auto& user = room[room_id].get_Room_user();
-	for (size_t n : user)
+	for (int n : user)
 	{
 		const auto& user = session_to_user[n];
 		info.user.emplace_back(n, user->get_username(), user->is_ready());
@@ -203,14 +215,14 @@ void System::broadcast_room_info(size_t room_id)
 	broadcast_event_in_room(room_id, msg);
 }
 
-void System::broadcast_event_in_room(size_t room_id, std::shared_ptr<Proto_msg> msg)
+void System::broadcast_event_in_room(int room_id, std::shared_ptr<Proto_msg> msg)
 {
 	const auto& users = room[room_id].get_Room_user();
 	for (const auto& n : users)
 		session[n]->push_event(msg);
 }
 
-void System::delete_room(size_t room_id)
+void System::delete_room(int room_id)
 {
 	return;
 }
@@ -225,6 +237,7 @@ ASYNC_RET System::route()
 	std::shared_ptr<Proto_msg> msg = msg_que.front();
 	msg_que.pop();
 	std::cout << msg->head.service << std::endl;
+
 	switch (msg->head.service)
 	{
 		//case 1:登录服务
@@ -263,6 +276,16 @@ ASYNC_RET System::route()
 		set_ready(msg);
 		break;
 	}
+	case 8:
+	{
+		start_game(msg);
+		break;
+	}
+	case 100:
+	{
+
+	}
+
 	case 50000:
 	{
 		close(msg);

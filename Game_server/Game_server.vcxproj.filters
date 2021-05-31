@@ -42,6 +42,9 @@
     <ClCompile Include="Character.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="Character_factory.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Game_room.h">
@@ -72,6 +75,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="Character.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Character_factory.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

@@ -1,4 +1,5 @@
 #pragma once
+#pragma once
 #include "User.h"
 #include "Game_room.h"
 #include "ID_generator.h"
@@ -31,11 +32,11 @@ private:
 	ip::tcp::endpoint& ep;
 	ip::tcp::acceptor acp;
 
-	ID_generator<size_t>session_gen;
-	std::map <size_t, std::shared_ptr<ID<size_t>>>session_register;
+	ID_generator<int>session_gen;
+	std::map <int, std::shared_ptr<ID<int>>>session_register;
 	std::vector<std::shared_ptr<Tcp_connection>>session;
 	std::queue<std::shared_ptr<Proto_msg>>msg_que;
-	std::unordered_map<std::string, size_t>username_to_session;//key:session_id, value:User
+	std::unordered_map<std::string, int>username_to_session;//key:session_id, value:User
 	std::vector<std::shared_ptr<User>>session_to_user;
 
 	ASYNC_RET login(std::shared_ptr<Proto_msg>msg);
@@ -47,9 +48,18 @@ private:
 
 	void set_ready(std::shared_ptr<Proto_msg>msg);
 	void start_game(std::shared_ptr<Proto_msg>msg);
+	void listen_room(int room_id);
 
-	void broadcast_room_info(size_t room_id);
-	void broadcast_event_in_room(size_t room_id, std::shared_ptr<Proto_msg>msg);
-	void delete_room(size_t room_id);
+	void move_location(std::shared_ptr<Proto_msg>msg);
+	void attack(std::shared_ptr<Proto_msg>msg);
+	void heal(std::shared_ptr<Proto_msg>msg);
+	void mine(std::shared_ptr<Proto_msg>msg);
+
+
+
+
+	void broadcast_room_info(int room_id);
+	void broadcast_event_in_room(int room_id, std::shared_ptr<Proto_msg>msg);
+	void delete_room(int room_id);
 	std::vector<Game_room>room;
 };
