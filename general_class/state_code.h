@@ -1,7 +1,22 @@
 #pragma once
+#pragma once
 #include<string>
 #include<boost/serialization/serialization.hpp>
-enum  CODE { NONE, LOGIN_SUCCESS, LOGIN_REPEATED, ROOM_REPEATED, ROOM_FULL, ROOM_NOT_EXIST, NOT_HOME_OWNER, NOT_READY };
+enum  CODE {
+	NONE,
+	LOGIN_SUCCESS,
+	LOGIN_REPEATED,
+	ROOM_FULL,
+	ROOM_NOT_EXIST,
+	NOT_HOME_OWNER,
+	NOT_READY,
+	NO_ACTION,
+	NO_ARMO,
+	NO_BANDAGE,
+	OBJECT_HAS_DEAD,
+	MOVE_TO_SAME_LOCATION,
+	SKILL_STILL_IN_COOLDOWN,
+};
 /*namespace boost
 {
 	namespace serialization
@@ -13,7 +28,6 @@ enum  CODE { NONE, LOGIN_SUCCESS, LOGIN_REPEATED, ROOM_REPEATED, ROOM_FULL, ROOM
 		}
 	}
 }*/
-
 
 class state_code
 {
@@ -31,6 +45,5 @@ public:
 	bool operator!=(const CODE code)const;
 private:
 	CODE code = CODE::NONE;
-	const static std::string message_def[1000];
+	static std::string message_def[1000];
 };
-

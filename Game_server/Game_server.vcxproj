@@ -150,6 +150,7 @@
     <ClCompile Include="..\general_class\User_info.cpp" />
     <ClCompile Include="Game_room.cpp" />
     <ClCompile Include="Game_server.cpp" />
+    <ClCompile Include="Game_system.cpp" />
     <ClCompile Include="System.cpp" />
     <ClCompile Include="User.cpp" />
   </ItemGroup>
@@ -160,6 +161,7 @@
     <ClInclude Include="..\general_class\Tcp_connection.h" />
     <ClInclude Include="..\general_class\User_info.h" />
     <ClInclude Include="Game_room.h" />
+    <ClInclude Include="Game_system.h" />
     <ClInclude Include="ID_generator.h" />
     <ClInclude Include="System.h" />
     <ClInclude Include="User.h" />
