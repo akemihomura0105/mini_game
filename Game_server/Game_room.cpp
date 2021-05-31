@@ -65,10 +65,5 @@ const std::list<size_t>& Game_room::get_Room_user() const
 	return users;
 }
 
-bool Game_room::operator==(const Game_room& room) const
-{
-	return get_id() == room.get_id();
-}
-
 Game_room::Game_room() {}
 Game_room::Game_room(const Room_property&& _prop) :prop(_prop) {}

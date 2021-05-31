@@ -39,7 +39,7 @@
     <ClCompile Include="..\general_class\Tcp_connection.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="Game_system.cpp">
+    <ClCompile Include="Character.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
@@ -71,7 +71,7 @@
     <ClInclude Include="..\general_class\Room_info.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="Game_system.h">
+    <ClInclude Include="Character.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
