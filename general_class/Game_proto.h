@@ -27,8 +27,6 @@
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/endian.hpp>
 #include <vector>
-#include <string_view>
-#include <SDKDDKVer.h>
 #include "../general_class/state_code.h"
 
 using namespace boost::asio;
@@ -81,6 +79,7 @@ void serialize_obj(std::string& buffer, Args&&... args)
 {
 	std::stringstream os;
 	boost::archive::text_oarchive oa(os);
+	buffer.clear();
 	serialize_obj0(oa, os, buffer, std::forward<Args&>(args)...);
 }
 

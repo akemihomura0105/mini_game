@@ -13,7 +13,7 @@ using namespace boost::asio;
 class Tcp_connection :public std::enable_shared_from_this<Tcp_connection>
 {
 public:
-	Tcp_connection(io_context& _io, std::shared_ptr<ip::tcp::socket>_sock, std::queue<std::shared_ptr<Proto_msg>>& msg_que, size_t session_id);
+	Tcp_connection(io_context& _io, std::shared_ptr<ip::tcp::socket>_sock, std::queue<std::shared_ptr<Proto_msg>>& msg_que, int session_id);
 	void run();
 	void pause();
 	void close();
@@ -34,5 +34,5 @@ private:
 	ASYNC_RET send_event(const boost::system::error_code& ec);
 	void push_msg(std::shared_ptr<Proto_msg>proto_ptr, const boost::system::error_code& ec);
 	std::string write_buf, read_buf;
-	size_t session_id;
+	int session_id;
 };

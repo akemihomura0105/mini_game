@@ -4,6 +4,8 @@ class Actionable_character
 {
 	static constexpr int MAX_HP = 10;
 public:
+	int get_character_id()const;
+	int get_game_id()const;
 	void get_damage(int n);
 	virtual state_code attack(Actionable_character& character);
 	state_code treasure_hunt();
@@ -13,12 +15,13 @@ public:
 	virtual void next_turn();
 	virtual void next_day();
 private:
+	int character_id;
+	int game_id;
 	int HP;
 	int armo;
 	int bandage;
 	int coin;
 	int location;
-	int session_id;
 	bool action_flag;
 	bool alive_flag;
 };

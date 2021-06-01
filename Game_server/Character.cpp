@@ -1,5 +1,35 @@
 #include "Character.h"
 
+int Actionable_character::get_session_id()const
+{
+	return session_id;
+}
+
+int Actionable_character::get_character_id()const
+{
+	return character_id;
+}
+
+int Actionable_character::get_game_id()const
+{
+	return game_id;
+}
+
+int Actionable_character::get_hp_id() const
+{
+	return HP;
+}
+
+int Actionable_character::get_location()const
+{
+	return location;
+}
+
+void Actionable_character::set_character_id(int n)
+{
+	character_id = n;
+}
+
 void Actionable_character::get_damage(int n)
 {
 	HP -= n;
@@ -82,6 +112,10 @@ void Actionable_character::next_turn()
 	action_flag = true;
 }
 
+Actionable_character::Actionable_character(int _game_id, int _session_id) :game_id(_game_id), session_id(_session_id)
+{
+}
+
 state_code Evil_spirit::attack(Actionable_character& character, bool try_flag)
 {
 	state_code sc;
@@ -110,4 +144,14 @@ void Evil_spirit::next_turn()
 void Treasure_hunter::explore()
 {
 
+}
+
+Treasure_hunter::Treasure_hunter(int game_id, int session_id) :Actionable_character(game_id, session_id)
+{
+	set_character_id(1);
+}
+
+Evil_spirit::Evil_spirit(int game_id, int session_id) : Actionable_character(game_id, session_id)
+{
+	set_character_id(2);
 }

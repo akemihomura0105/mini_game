@@ -21,12 +21,12 @@ void User::set_id(int n)
 	id = n;
 }
 
-void User::set_room_id(size_t _room_id)
+void User::set_room_id(int _room_id)
 {
 	room_id = _room_id;
 }
 
-size_t User::get_room_id()
+int User::get_room_id()
 {
 	return room_id;
 }

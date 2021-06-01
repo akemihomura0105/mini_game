@@ -1,5 +1,4 @@
 #pragma once
-#pragma once
 #include "User.h"
 #include "Game_room.h"
 #include "ID_generator.h"
@@ -61,5 +60,5 @@ private:
 	void broadcast_room_info(int room_id);
 	void broadcast_event_in_room(int room_id, std::shared_ptr<Proto_msg>msg);
 	void delete_room(int room_id);
-	std::vector<Game_room>room;
+	std::vector<std::shared_ptr<Game_room>>room;
 };

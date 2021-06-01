@@ -1,7 +1,7 @@
 #include "Tcp_connection.h"
 
 Tcp_connection::Tcp_connection(io_context& _io, std::shared_ptr<ip::tcp::socket> _sock,
-	std::queue<std::shared_ptr<Proto_msg>>& _msg_que, size_t _session_id)
+	std::queue<std::shared_ptr<Proto_msg>>& _msg_que, int _session_id)
 	:io(_io), sock(_sock), msg_que(_msg_que), session_id(_session_id)
 {
 	write_buf.resize(65536);

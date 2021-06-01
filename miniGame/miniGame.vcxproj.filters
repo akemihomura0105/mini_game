@@ -42,6 +42,9 @@
     <ClCompile Include="..\general_class\Tcp_connection.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="Game_info.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Character.h">
@@ -75,6 +78,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="threadsafe_queue.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Game_info.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

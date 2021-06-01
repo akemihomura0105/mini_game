@@ -15,6 +15,7 @@
 #include "../general_class/Tcp_connection.h"
 #include "../general_class/Room_info.h"
 #include "threadsafe_queue.h"
+#include "Game_info.h"
 #include <queue>
 
 using namespace boost::asio;
@@ -32,8 +33,9 @@ private:
 	std::shared_ptr<ip::tcp::socket>sock;
 	std::shared_ptr<Tcp_connection>conn;
 	std::queue<std::shared_ptr<Proto_msg>>msg_que;
-	size_t session_id;
-	size_t room_id;
+	int session_id;
+	int room_id;
+	Room_info room_info;
 
 	int login();
 	std::shared_ptr<Proto_msg> get_msg();
@@ -50,8 +52,12 @@ private:
 	STATE state;
 	threadsafe_queue<std::string>input_que;
 	void otp_room_operation();
+	void otp_game_operation();
 	void hall_system_run();
 	void room_system_run();
+
+	void sync_time(std::shared_ptr<Proto_msg>msg);
+	void game_system_run();
 	void update_room_info(std::shared_ptr<Proto_msg>msg);
 
 	void read_input();
@@ -61,4 +67,7 @@ private:
 
 	ASYNC_RET route();
 	ASYNC_RET message_route();
+
+	std::shared_ptr<basic_game_info>game_info;
+	void create_game_info(std::shared_ptr<Proto_msg>msg);
 };

@@ -11,7 +11,7 @@ void Otp_table::insert(std::vector<std::string> vec)
 	}
 }
 
-Otp_table::Otp_table(size_t n)
+Otp_table::Otp_table(int n)
 {
 	len.resize(n);
 }

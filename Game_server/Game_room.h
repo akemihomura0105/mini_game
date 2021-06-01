@@ -6,13 +6,16 @@
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/serialization/serialization.hpp>
+#include <boost/serialization/vector.hpp>
 #include <boost/serialization/list.hpp>
+#include <boost/serialization/utility.hpp>
 #include <set>
 #include <map>
 #include <list>
 #include <unordered_set>
 #include <tuple>
 #include <random>
+#include <iostream>
 
 class Game_room :public std::enable_shared_from_this<Game_room>
 {
@@ -52,23 +55,23 @@ public:
 	const std::list<int>& get_Room_user()const;
 	//获取房间id
 	int get_id()const;
-	Game_room(io_context& io);
-	Game_room(const Room_property&& prop, io_context& io);
+	Game_room(io_context* io);
+	Game_room(const Room_property&& prop, io_context* io);
 	static ID_generator<int> room_gen;
 
 	//开始游戏后所需函数---------------------------------------------------
 
 
 	//监听回合，若当前回合已经进入结算，则处理数据包。
-	bool listen();
+	int listen();
 	//弹出消息队列中的消息
 	std::pair<int, std::shared_ptr<Proto_msg>>msg_pop();
 	//根据会话号获取玩家信息
 	std::shared_ptr<Actionable_character> get_player(int session_id);
 private:
 
-	io_context& io;
-	bool listen_flag = false;
+	io_context* io;
+	int listen_flag = 0;
 	Room_property prop;
 	std::list<int>users;
 	int rome_owner = 0;
@@ -103,20 +106,24 @@ private:
 	std::queue<move_tuple>move_que;
 
 	//Mapping from the location to the character.
-	std::vector<std::unordered_set<int>>location;
+	std::vector<std::unordered_set<std::shared_ptr<Actionable_character>>>location;
 	//Game start time.
 	std::chrono::time_point<std::chrono::steady_clock>start_time;
 	//End time of the last turn.
 	std::chrono::time_point<std::chrono::steady_clock>last_time;
+	std::chrono::milliseconds last_broadcast_time;
 
+	void enable_listen();
 	//convert the list form to the unordered_map form.
 	void load_player();
 	std::chrono::seconds get_duration_since_last_stage();
 	bool switch_stage(std::chrono::seconds sec);
-	void ready_stage(bool exec = true);
-	void depature_stage0(bool exec = true);
-	void depature_stage1(bool exec = true);
+	void ready_stage(bool exec);
+	void depature_stage0(bool exec);
+	void depature_stage1(bool exec);
+	std::vector<int>get_session_set(int location);
+	void broadcast_time();
 	void broadcast_character();
-	void broadcast_location(bool all_flag = false);
-	void broadcast_hp(bool all_flag = false);
+	void broadcast_location(int location);
+	void broadcast_hp(int location);
 };

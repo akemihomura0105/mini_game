@@ -27,12 +27,6 @@
     <ClCompile Include="Game_server.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\general_class\Game_proto.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="..\general_class\state_code.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="..\general_class\User_info.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -45,6 +39,12 @@
     <ClCompile Include="Character_factory.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="..\general_class\Game_proto.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\general_class\state_code.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Game_room.h">
@@ -54,9 +54,6 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="User.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="..\general_class\Game_proto.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="..\general_class\state_code.h">
@@ -78,6 +75,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="Character_factory.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\general_class\Game_proto.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

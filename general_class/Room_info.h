@@ -17,9 +17,9 @@ struct Room_prop
 		ar& capacity;
 	}
 	std::string name;
-	size_t id;
-	size_t size;
-	size_t capacity;
+	int id;
+	int size;
+	int capacity;
 };
 
 struct Room_info
@@ -33,7 +33,7 @@ struct Room_info
 		ar& user;
 	}
 	std::string name;
-	size_t room_id;
-	size_t capacity;
+	int room_id;
+	int capacity;
 	std::list<User_info>user;
 };

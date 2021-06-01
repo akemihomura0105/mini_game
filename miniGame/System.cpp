@@ -75,7 +75,7 @@ int System::join_room(int state)
 {
 	Proto_msg req_msg(1, 5);
 	std::cout << "请输入加入房间的房间号：\n";
-	size_t room_id;
+	int room_id;
 	std::cin >> room_id;
 	serialize_obj(req_msg.body, session_id, room_id);
 	send_msg(req_msg);
@@ -103,18 +103,18 @@ int System::make_room(int state = 0)
 	while (!isalpha(std::cin.peek()))
 		std::cin.get();
 	std::getline(std::cin, user_input);
-	size_t offset = user_input.find('+', 0);
+	int offset = user_input.find('+', 0);
 	if (offset == std::string::npos)
 		return make_room(1);
 	if (offset == user_input.size() - 1)
 		return make_room(2);
-	size_t capacity = 0;
+	int capacity = 0;
 	for (int i = offset + 1; i < user_input.size(); i++)
 	{
 		if (!isdigit(user_input[i]))
 			return make_room(3);
 		capacity = capacity * 10 + user_input[i] - '0';
-		constexpr size_t MAX_CAPACITY = 20;
+		constexpr int MAX_CAPACITY = 20;
 		if (capacity > MAX_CAPACITY)
 		{
 			std::cout << "人数超限\n" << please_input_std_format;
@@ -178,6 +178,21 @@ ASYNC_RET System::route()
 		update_room_info(msg);
 		break;
 	}
+	case 49:
+	{
+		sync_time(msg);
+		break;
+	}
+	case 50:
+	{
+		game_system_run();
+		break;
+	}
+	case 51:
+	{
+		create_game_info(msg);
+		break;
+	}
 	default:
 		std::cerr << "unknown package" << std::endl;
 	}
@@ -194,17 +209,35 @@ ASYNC_RET System::message_route()
 		io.post(bind(&System::message_route, shared_from_this()));
 		return;
 	}
-	if (*input == "q")
+	if (state == STATE::ROOM)
 	{
-		exit_room();
-		state = STATE::HALL;
+		if (*input == "q")
+		{
+			exit_room();
+			state = STATE::HALL;
+		}
+		if (*input == "sr")
+			set_ready();
+		if (*input == "sg")
+			start_game();
 	}
-	if (*input == "sr")
-		set_ready();
-	if (*input == "sg")
-		start_game();
+
+	if (state == STATE::GAME)
+	{
+		
+	}
+
+
+
+
+
 	if (*input == "?")
-		otp_room_operation();
+	{
+		if (state == STATE::ROOM)
+			otp_room_operation();
+		if (state == STATE::GAME)
+			otp_game_operation();
+	}
 	io.post(bind(&System::message_route, shared_from_this()));
 }
 
@@ -215,6 +248,11 @@ void System::otp_room_operation()
 	tbl.insert({ "准备/取消准备","sr" });
 	tbl.insert({ "开始游戏","sg" });
 	std::cout << tbl;
+}
+
+void System::otp_game_operation()
+{
+
 }
 
 void System::hall_system_run()
@@ -258,17 +296,28 @@ void System::room_system_run()
 	input_t.detach();
 }
 
+void System::sync_time(std::shared_ptr<Proto_msg>msg)
+{
+	std::cout << msg->body;
+	deserialize_obj(msg->body, game_info->now_time);
+	game_info->update();
+}
+
+void System::game_system_run()
+{
+	state = STATE::GAME;
+}
+
 void System::update_room_info(std::shared_ptr<Proto_msg>msg)
 {
-	Room_info info;
-	deserialize_obj(msg->body, info);
+	deserialize_obj(msg->body, room_info);
 	Otp_table prop_table(3);
 	prop_table.insert({ "名称","房间号","容量" });
-	prop_table.insert({ info.name,std::to_string(info.room_id),std::to_string(info.user.size()) + "/" + std::to_string(info.capacity) });
-	info.user;
+	prop_table.insert({ room_info.name,std::to_string(room_info.room_id),std::to_string(room_info.user.size()) + "/" + std::to_string(room_info.capacity) });
+	room_info.user;
 	Otp_table user_table(2);
 	user_table.insert({ "用户名","准备状态" });
-	for (const auto& n : info.user)
+	for (const auto& n : room_info.user)
 		user_table.insert({ n.name, (n.ready ? "已准备" : "未准备") });
 	std::cout << prop_table << user_table;
 }
@@ -297,6 +346,22 @@ void System::start_game()
 	auto req_msg = std::make_shared<Proto_msg>(1, 8);
 	serialize_obj(req_msg->body, session_id, room_id);
 	conn->push_event(req_msg);
+}
+
+void System::create_game_info(std::shared_ptr<Proto_msg>msg)
+{
+	int character_id;
+	deserialize_obj(msg->body, character_id);
+	game_info = std::make_shared<basic_game_info>();
+	game_info->player.resize(room_info.user.size());
+	int p = 0;
+	for (auto ite = room_info.user.begin(); ite != room_info.user.end(); ite++, p++)
+	{
+		game_info->player[p].name = ite->name;
+		game_info->player[p].session_id = ite->session_id;
+	}
+	game_info->character_id = character_id;
+	std::cout << *game_info << "\n";
 }
 
 System::System(io_context& _io, ip::tcp::endpoint& _ep) :io(_io), ep(_ep)
