@@ -70,4 +70,5 @@ private:
 
 	std::shared_ptr<basic_game_info>game_info;
 	void create_game_info(std::shared_ptr<Proto_msg>msg);
+	void change_location(int location);
 };

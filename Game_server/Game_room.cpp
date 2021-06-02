@@ -39,8 +39,10 @@ int Game_room::remove_user(int session_id, std::shared_ptr<User> _user)
 
 void Game_room::start_game()
 {
+	using namespace std::chrono;
 	load_player();
-	last_time = start_time = chrono::steady_clock::now();
+	last_time = start_time = steady_clock::now();
+	last_broadcast_time = 0s;
 	io->post(bind(&Game_room::ready_stage, shared_from_this(), true));
 	io->post(bind(&Game_room::broadcast_time, shared_from_this()));
 }
@@ -106,6 +108,10 @@ void Game_room::load_player()
 		vec = { 1 };
 		location.resize(3);
 		break;
+	case 2:
+		vec = { 1,2 };
+		location.resize(3);
+		break;
 	case 4:
 		vec = { 1,1,1,2 };
 		location.resize(3);
@@ -152,7 +158,7 @@ void Game_room::ready_stage(bool exec)
 		enable_listen();
 	}
 	auto duration = get_duration_since_last_stage();
-	if (switch_stage(5s))
+	if (switch_stage(7s))
 		io->post(bind(&Game_room::depature_stage0, shared_from_this(), true));
 	else
 		io->post(bind(&Game_room::ready_stage, shared_from_this(), false));
@@ -186,11 +192,14 @@ std::vector<int> Game_room::get_session_set(int _location)
 
 void Game_room::broadcast_time()
 {
+	//static int cnt = 0;
 	using namespace std::chrono;
 	auto msg = std::make_shared<Proto_msg>(1, 49);
-	if ((steady_clock::now() - start_time) > last_broadcast_time + 1s)
+	seconds interval = 1s;
+	//std::cerr << cnt++ << std::endl;
+	if ((steady_clock::now() - start_time) > last_broadcast_time + interval)
 	{
-		last_broadcast_time++;
+		last_broadcast_time += interval;
 		auto duration = get_duration_since_last_stage();
 		serialize_obj(msg->body, (int)duration.count());
 		for (const auto& n : player)

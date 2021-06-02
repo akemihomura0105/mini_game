@@ -95,7 +95,7 @@ ASYNC_RET System::show_room(std::shared_ptr<Proto_msg> msg)
 	deserialize_obj(msg->body, session_id);
 	std::vector<Game_room::Room_property>room_vec;
 	for (const auto& n : room)
-		if (n->get_id() != 0)
+		if (n != nullptr)
 			room_vec.emplace_back(n->get_Room_property());
 	serialize_obj(res_msg->body, state_code(), room_vec);
 	std::cerr << res_msg->body << std::endl;

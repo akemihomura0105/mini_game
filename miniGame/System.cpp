@@ -224,7 +224,11 @@ ASYNC_RET System::message_route()
 
 	if (state == STATE::GAME)
 	{
-		
+		if (input->substr(0, 2) == "mv")
+		{
+			int val = (*input)[2] - '0';
+
+		}
 	}
 
 
@@ -362,6 +366,16 @@ void System::create_game_info(std::shared_ptr<Proto_msg>msg)
 	}
 	game_info->character_id = character_id;
 	std::cout << *game_info << "\n";
+}
+
+void System::change_location(int location)
+{
+	if (!game_info->action_point)
+		std::cout << "没有足够的体力\n";
+	if (game_info->location == location)
+		std::cout << "尝试移动至相同的地点\n";
+	auto msg = std::make_shared<Proto_msg>(1, 52);
+	serialize_obj(msg->body, session_id, room_id);
 }
 
 System::System(io_context& _io, ip::tcp::endpoint& _ep) :io(_io), ep(_ep)

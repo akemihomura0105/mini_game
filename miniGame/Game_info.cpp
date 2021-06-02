@@ -16,6 +16,7 @@ std::ostream& operator<<(std::ostream& os, const basic_game_info& info)
 
 	constexpr int character_name_len = 10;
 
+	system("cls");
 	info.otp_current_turn();
 	std::cout << "身份: " << character_name << "\n";
 	std::cout << "当前生命: " << info.HP << "\n";
