@@ -63,15 +63,18 @@ public:
 
 
 	//监听回合，若当前回合已经进入结算，则处理数据包。
-	int listen();
+	bool listen();
 	//弹出消息队列中的消息
 	std::pair<int, std::shared_ptr<Proto_msg>>msg_pop();
 	//根据会话号获取玩家信息
 	std::shared_ptr<Actionable_character> get_player(int session_id);
+	void change_location(int session_id, int location);
+	void attack(int src, int des);
+	void heal(int src, int des);
+	void mine(int session_id);
 private:
 
 	io_context* io;
-	int listen_flag = 0;
 	Room_property prop;
 	std::list<int>users;
 	int rome_owner = 0;
@@ -94,6 +97,7 @@ private:
 	std::unordered_map<int, std::shared_ptr<Actionable_character>>player;
 	//event que, the system will read from this queue to send message to client.
 	std::queue<std::pair<int, std::shared_ptr<Proto_msg>>>msg_que;
+
 	//heal tuple, define the heal action.@1 means src's session_id, @2means des's session_id.
 	typedef std::tuple<int, int>heal_tuple;
 	std::queue<heal_tuple>heal_que;
@@ -113,7 +117,6 @@ private:
 	std::chrono::time_point<std::chrono::steady_clock>last_time;
 	std::chrono::milliseconds last_broadcast_time;
 
-	void enable_listen();
 	//convert the list form to the unordered_map form.
 	void load_player();
 	std::chrono::seconds get_duration_since_last_stage();
@@ -126,4 +129,7 @@ private:
 	void broadcast_character();
 	void broadcast_location(int location);
 	void broadcast_hp(int location);
+
+	void push_state_code(int session_id, const state_code& sc);
+
 };

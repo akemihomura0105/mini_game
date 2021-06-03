@@ -16,6 +16,7 @@ struct basic_game_info
 	int character_id, session_id;
 	int coin;
 	int armo;
+	int bandage;
 	int HP = 10;
 	int day = 0;
 	int turn = 0;

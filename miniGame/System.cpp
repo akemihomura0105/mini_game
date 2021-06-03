@@ -193,6 +193,11 @@ ASYNC_RET System::route()
 		create_game_info(msg);
 		break;
 	}
+	case 52:
+	{
+		receive_state_code_result(msg);
+	}
+
 	default:
 		std::cerr << "unknown package" << std::endl;
 	}
@@ -224,10 +229,20 @@ ASYNC_RET System::message_route()
 
 	if (state == STATE::GAME)
 	{
-		if (input->substr(0, 2) == "mv")
+		if (input->size() >= 3 && input->substr(0, 2) == "mv")
 		{
 			int val = (*input)[2] - '0';
-
+			change_location(val);
+		}
+		if (input->size() >= 4 && input->substr(0, 3) == "atk")
+		{
+			int game_id = (*input)[3] - '0';
+			attack(game_id);
+		}
+		if (input->size() >= 5 && input->substr(0, 4) == "heal")
+		{
+			int game_id = (*input)[4] - '0';
+			heal(game_id);
 		}
 	}
 
@@ -375,7 +390,57 @@ void System::change_location(int location)
 	if (game_info->location == location)
 		std::cout << "尝试移动至相同的地点\n";
 	auto msg = std::make_shared<Proto_msg>(1, 52);
+	serialize_obj(msg->body, session_id, location, room_id);
+	conn->push_event(msg);
+}
+
+void System::attack(int game_id)
+{
+	int des = game_info->player[game_id].session_id;
+	auto msg = std::make_shared<Proto_msg>(1, 53);
+	serialize_obj(msg->body, session_id, des, room_id);
+	conn->push_event(msg);
+}
+
+void System::heal(int game_id)
+{
+	int des = game_info->player[game_id].session_id;
+	auto msg = std::make_shared<Proto_msg>(1, 54);
+	serialize_obj(msg->body, session_id, des, room_id);
+	conn->push_event(msg);
+}
+
+void System::mine()
+{
+	auto msg = std::make_shared<Proto_msg>(1, 55);
 	serialize_obj(msg->body, session_id, room_id);
+	conn->push_event(msg);
+}
+
+void System::receive_state_code_result(std::shared_ptr<Proto_msg> msg)
+{
+	state_code sc;
+	deserialize_obj(msg->body, sc);
+	if (sc == CODE::MOVE_SUCCESS)
+	{
+		game_info->action_point = false;
+	}
+	if (sc == CODE::ATTACK_SUCCESS)
+	{
+		game_info->action_point = false;
+		game_info->armo--;
+	}
+	if (sc == CODE::HEAL_SUCCESS)
+	{
+		game_info->action_point = false;
+		game_info->bandage--;
+	}
+	if (sc == CODE::MINE_SUCCESS)
+	{
+		game_info->action_point = false;
+		game_info->coin += 3;
+	}
+	std::cout << sc.message();
 }
 
 System::System(io_context& _io, ip::tcp::endpoint& _ep) :io(_io), ep(_ep)

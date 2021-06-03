@@ -22,9 +22,9 @@ class System :public std::enable_shared_from_this<System>
 public:
 	void run();
 	void close(std::shared_ptr<Proto_msg>msg);
-	ASYNC_RET accept_handler(std::shared_ptr<ip::tcp::socket>sock, const boost::system::error_code& ec);
+	void accept_handler(std::shared_ptr<ip::tcp::socket>sock, const boost::system::error_code& ec);
 
-	ASYNC_RET route();
+	void route();
 	System(io_context& _io, ip::tcp::endpoint& _ep);
 private:
 	io_context& io;
@@ -38,12 +38,12 @@ private:
 	std::unordered_map<std::string, int>username_to_session;//key:session_id, value:User
 	std::vector<std::shared_ptr<User>>session_to_user;
 
-	ASYNC_RET login(std::shared_ptr<Proto_msg>msg);
+	void login(std::shared_ptr<Proto_msg>msg);
 
-	ASYNC_RET show_room(std::shared_ptr<Proto_msg>msg);
-	ASYNC_RET create_room(std::shared_ptr<Proto_msg>msg);
-	ASYNC_RET join_room(std::shared_ptr<Proto_msg>msg);
-	ASYNC_RET exit_room(std::shared_ptr<Proto_msg>msg);
+	void show_room(std::shared_ptr<Proto_msg>msg);
+	void create_room(std::shared_ptr<Proto_msg>msg);
+	void join_room(std::shared_ptr<Proto_msg>msg);
+	void exit_room(std::shared_ptr<Proto_msg>msg);
 
 	void set_ready(std::shared_ptr<Proto_msg>msg);
 	void start_game(std::shared_ptr<Proto_msg>msg);

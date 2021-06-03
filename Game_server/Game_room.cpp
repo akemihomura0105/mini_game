@@ -72,15 +72,13 @@ const std::list<int>& Game_room::get_Room_user() const
 Game_room::Game_room(io_context* _io) :io(_io) {}
 Game_room::Game_room(const Room_property&& _prop, io_context* _io) : prop(_prop), io(_io) {}
 
-int Game_room::listen()
+bool Game_room::listen()
 {
-	return listen_flag;
+	return !msg_que.empty();
 }
 
 std::pair<int, std::shared_ptr<Proto_msg>> Game_room::msg_pop()
 {
-	if (msg_que.front().first == -1)
-		listen_flag--;
 	auto pair = std::move(msg_que.front());
 	msg_que.pop();
 	return pair;
@@ -89,12 +87,6 @@ std::pair<int, std::shared_ptr<Proto_msg>> Game_room::msg_pop()
 std::shared_ptr<Actionable_character> Game_room::get_player(int session_id)
 {
 	return player[session_id];
-}
-
-void Game_room::enable_listen()
-{
-	listen_flag++;
-	msg_que.emplace(-1, nullptr);
 }
 
 void Game_room::load_player()
@@ -142,7 +134,6 @@ bool Game_room::switch_stage(std::chrono::seconds sec)
 	if (duration >= sec)
 	{
 		last_time = steady_clock::now();
-		enable_listen();
 		return true;
 	}
 	return false;
@@ -155,7 +146,6 @@ void Game_room::ready_stage(bool exec)
 	{
 		std::cerr << "enter the ready stage" << std::endl;
 		broadcast_character();
-		enable_listen();
 	}
 	auto duration = get_duration_since_last_stage();
 	if (switch_stage(7s))
@@ -204,7 +194,6 @@ void Game_room::broadcast_time()
 		serialize_obj(msg->body, (int)duration.count());
 		for (const auto& n : player)
 			msg_que.emplace(n.first, msg);
-		enable_listen();
 	}
 	io->post(bind(&Game_room::broadcast_time, shared_from_this()));
 }
@@ -238,4 +227,44 @@ void Game_room::broadcast_hp(int _location)
 	serialize_obj(msg->body, life_set);
 	for (const auto& n : location[_location])
 		msg_que.emplace(n->get_session_id(), msg);
+}
+
+void Game_room::push_state_code(int session_id, const state_code& sc)
+{
+	auto msg = std::make_shared<Proto_msg>(1, 52);
+	serialize_obj(msg->body, sc);
+	msg_que.emplace(session_id, msg);
+}
+
+void Game_room::change_location(int session_id, int location)
+{
+	auto sc = player[session_id]->move(location, true);
+	push_state_code(session_id, sc);
+	if (sc == CODE::MOVE_SUCCESS)
+		move_que.emplace(session_id, location);
+}
+
+void Game_room::attack(int src, int des)
+{
+	auto sc = player[src]->attack(*player[des], true);
+	push_state_code(src, sc);
+	if (sc == CODE::ATTACK_SUCCESS)
+		atk_que.emplace(src, des);
+}
+
+void Game_room::heal(int src, int des)
+{
+	auto sc = player[src]->heal(*player[des], true);
+	push_state_code(src, sc);
+	if (sc == CODE::HEAL_SUCCESS)
+		heal_que.emplace(src, des);
+}
+
+void Game_room::mine(int session_id)
+{
+	auto sc = player[session_id]->mine(true);
+	push_state_code(session_id, sc);
+	if (sc == CODE::MINE_SUCCESS)
+		mine_que.emplace(session_id);
+
 }

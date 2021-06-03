@@ -58,7 +58,7 @@ void System::accept_handler(std::shared_ptr<ip::tcp::socket>sock, const boost::s
 	acp.async_accept(*new_sock, boost::bind(&System::accept_handler, shared_from_this(), new_sock, placeholders::error));
 }
 
-ASYNC_RET System::login(std::shared_ptr<Proto_msg>msg)
+void System::login(std::shared_ptr<Proto_msg>msg)
 {
 	int session_id;
 	std::string username, password;
@@ -88,7 +88,7 @@ ASYNC_RET System::login(std::shared_ptr<Proto_msg>msg)
 	session[session_id]->push_event(login_msg);
 }
 
-ASYNC_RET System::show_room(std::shared_ptr<Proto_msg> msg)
+void System::show_room(std::shared_ptr<Proto_msg> msg)
 {
 	auto res_msg = std::make_shared<Proto_msg>(1, 2);
 	int session_id;
@@ -100,7 +100,7 @@ ASYNC_RET System::show_room(std::shared_ptr<Proto_msg> msg)
 	serialize_obj(res_msg->body, state_code(), room_vec);
 	std::cerr << res_msg->body << std::endl;
 	session[session_id]->push_event(res_msg);
-	return ASYNC_RET();
+	return void();
 }
 
 void System::create_room(std::shared_ptr<Proto_msg> msg)
@@ -194,11 +194,37 @@ void System::listen_room(int room_id)
 	while (room[room_id]->listen())
 	{
 		auto pair = room[room_id]->msg_pop();
-		if (pair.first == -1)
-			break;
 		session[pair.first]->push_event(pair.second);
 	}
 	io.post(boost::bind(&System::listen_room, shared_from_this(), room_id));
+}
+
+void System::move_location(std::shared_ptr<Proto_msg> msg)
+{
+	int session_id, location, room_id;
+	deserialize_obj(msg->body, session_id, location, room_id);
+	room[room_id]->change_location(session_id, location);
+}
+
+void System::attack(std::shared_ptr<Proto_msg> msg)
+{
+	int src, des, room_id;
+	deserialize_obj(msg->body, src, des, room_id);
+	room[room_id]->attack(src, des);
+}
+
+void System::heal(std::shared_ptr<Proto_msg> msg)
+{
+	int src, des, room_id;
+	deserialize_obj(msg->body, src, des, room_id);
+	room[room_id]->heal(src, des);
+}
+
+void System::mine(std::shared_ptr<Proto_msg> msg)
+{
+	int session_id, room_id;
+	deserialize_obj(msg->body, session_id, room_id);
+	room[room_id]->mine(session_id);
 }
 
 void System::broadcast_room_info(int room_id)
@@ -231,7 +257,7 @@ void System::delete_room(int room_id)
 	room[room_id].reset();
 }
 
-ASYNC_RET System::route()
+void System::route()
 {
 	if (msg_que.empty())
 	{
@@ -246,45 +272,38 @@ ASYNC_RET System::route()
 	{
 		//case 1:µÇÂ¼·þÎñ
 	case 1:
-	{
 		login(msg);
 		break;
-	}
 	case 2:
-	{
 		show_room(msg);
 		break;
-	}
 	case 3:
-	{
 		create_room(msg);
 		break;
-	}
 	case 4:
-	{
 		exit_room(msg);
 		break;
-	}
 	case 5:
-	{
 		join_room(msg);
 		break;
-	}
 	case 6:
-	{
 		exit_room(msg);
 		break;
-	}
 	case 7:
-	{
 		set_ready(msg);
 		break;
-	}
 	case 8:
-	{
 		start_game(msg);
 		break;
-	}
+	case 52:
+		move_location(msg);
+		break;
+	case 53:
+		attack(msg);
+		break;
+	case 54:
+		heal(msg);
+		break;
 	case 100:
 	{
 

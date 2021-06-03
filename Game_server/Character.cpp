@@ -53,8 +53,12 @@ state_code Actionable_character::attack(Actionable_character& character, bool tr
 		sc.set(CODE::OBJECT_HAS_DEAD);
 		return sc;
 	}
-	action_flag = false;
-	character.get_damage(1);
+	sc.set(CODE::ATTACK_SUCCESS);
+	if (!try_flag)
+	{
+		action_flag = false;
+		character.get_damage(1);
+	}
 	return sc;
 }
 
@@ -67,8 +71,11 @@ state_code Actionable_character::treasure_hunt(bool try_flag)
 		sc.set(CODE::NO_ACTION);
 		return sc;
 	}
-	coin += bonus;
-	action_flag = false;
+	if (!try_flag)
+	{
+		coin += bonus;
+		action_flag = false;
+	}
 }
 
 state_code Actionable_character::move(int target_location, bool try_flag)
@@ -84,8 +91,12 @@ state_code Actionable_character::move(int target_location, bool try_flag)
 		sc.set(CODE::MOVE_TO_SAME_LOCATION);
 		return sc;
 	}
-	location = target_location;
-	action_flag = false;
+	sc.set(CODE::MOVE_SUCCESS);
+	if (!try_flag)
+	{
+		location = target_location;
+		action_flag = false;
+	}
 	return sc;
 }
 
@@ -102,8 +113,35 @@ state_code Actionable_character::heal(Actionable_character& character, bool try_
 		sc.set(CODE::NO_BANDAGE);
 		return sc;
 	}
-	bandage--;
-	character.HP++;
+	if (character.HP == character.MAX_HP)
+	{
+		sc.set(CODE::OBJECT_HAS_FULL_HP);
+		return sc;
+	}
+	if (!character.alive_flag)
+	{
+		sc.set(CODE::OBJECT_HAS_DEAD);
+		return sc;
+	}
+	if (!try_flag)
+	{
+		bandage--;
+		character.HP++;
+	}
+	return sc;
+}
+
+state_code Actionable_character::mine(bool try_flag)
+{
+	state_code sc;
+	if (!action_flag)
+	{
+		sc.set(CODE::NO_ACTION);
+		return sc;
+	}
+	sc.set(CODE::MINE_SUCCESS);
+	if (!try_flag)
+		coin += 3;
 	return sc;
 }
 
@@ -124,8 +162,11 @@ state_code Evil_spirit::attack(Actionable_character& character, bool try_flag)
 		sc.set(CODE::SKILL_STILL_IN_COOLDOWN);
 		return sc;
 	}
-	skill_charge_num--;
-	character.get_damage(1);
+	if (!try_flag)
+	{
+		skill_charge_num--;
+		character.get_damage(1);
+	}
 	return sc;
 }
 
