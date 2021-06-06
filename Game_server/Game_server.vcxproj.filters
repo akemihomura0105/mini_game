@@ -80,5 +80,8 @@
     <ClInclude Include="..\general_class\Game_proto.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="..\general_class\stage_time.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

@@ -24,6 +24,7 @@ void System::close(std::shared_ptr<Proto_msg>msg)
 		//release from room
 		if (user->get_room_id())
 			room[user->get_room_id()]->remove_user(session_id, user);
+		username_to_session.erase(session_to_user[session_id]->get_username());
 		//release from user
 		session_to_user[session_id].reset();
 	}
@@ -62,6 +63,7 @@ void System::login(std::shared_ptr<Proto_msg>msg)
 {
 	int session_id;
 	std::string username, password;
+	std::cerr << msg->body;
 	deserialize_obj(msg->body, session_id, username);
 	auto user = std::make_shared<User>();
 	auto login_msg = std::make_shared<Proto_msg>(1, 1);

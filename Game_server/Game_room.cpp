@@ -121,22 +121,10 @@ void Game_room::load_player()
 	}
 }
 
-std::chrono::seconds Game_room::get_duration_since_last_stage()
+std::chrono::seconds Game_room::get_duration()
 {
 	using namespace std::chrono;
-	return duration_cast<seconds>(steady_clock::now() - last_time);
-}
-
-bool Game_room::switch_stage(std::chrono::seconds sec)
-{
-	using namespace std::chrono;
-	auto duration = get_duration_since_last_stage();
-	if (duration >= sec)
-	{
-		last_time = steady_clock::now();
-		return true;
-	}
-	return false;
+	return duration_cast<seconds>(steady_clock::now() - start_time);
 }
 
 void Game_room::ready_stage(bool exec)
@@ -147,9 +135,11 @@ void Game_room::ready_stage(bool exec)
 		std::cerr << "enter the ready stage" << std::endl;
 		broadcast_character();
 	}
-	auto duration = get_duration_since_last_stage();
-	if (switch_stage(7s))
+	if (get_duration() >= stage_time::ready)
+	{
+		switch_stage_calc();
 		io->post(bind(&Game_room::depature_stage0, shared_from_this(), true));
+	}
 	else
 		io->post(bind(&Game_room::ready_stage, shared_from_this(), false));
 }
@@ -161,23 +151,24 @@ void Game_room::depature_stage0(bool exec)
 	{
 		std::cerr << "enter the depature stage0" << std::endl;
 	}
-	if (switch_stage(5s))
+	if (get_duration() >= stage_time::depature0)
+	{
+		switch_stage_calc();
 		io->post(bind(&Game_room::depature_stage1, shared_from_this(), true));
+	}
 	else
 		io->post(bind(&Game_room::depature_stage0, shared_from_this(), false));
 }
 
 void Game_room::depature_stage1(bool exec)
 {
+	using namespace std::chrono;
+	if (exec)
+	{
 
-}
+	}
+	//if(get_duration()>=stage_time::depature1)
 
-std::vector<int> Game_room::get_session_set(int _location)
-{
-	std::vector<int>session_set;
-	for (const auto& p : location[_location])
-		session_set.push_back(p->get_session_id());
-	return session_set;
 }
 
 void Game_room::broadcast_time()
@@ -190,8 +181,7 @@ void Game_room::broadcast_time()
 	if ((steady_clock::now() - start_time) > last_broadcast_time + interval)
 	{
 		last_broadcast_time += interval;
-		auto duration = get_duration_since_last_stage();
-		serialize_obj(msg->body, (int)duration.count());
+		serialize_obj(msg->body, (int)get_duration().count());
 		for (const auto& n : player)
 			msg_que.emplace(n.first, msg);
 	}
@@ -210,11 +200,17 @@ void Game_room::broadcast_character()
 
 void Game_room::broadcast_location(int _location)
 {
-	auto session_set = get_session_set(_location);
-	auto msg = std::make_shared<Proto_msg>(1, 52);
-	serialize_obj(msg->body, session_set);
-	for (int i : session_set)
-		msg_que.emplace(i, msg);
+	std::vector<int>location_set;
+	location_set.push_back(_location);
+	for (const auto& n : location[_location])
+		location_set.push_back(n->get_game_id());
+	auto msg = std::make_shared<Proto_msg>(1, 53);
+	serialize_obj(msg->body, location_set);
+	for (const auto& n : location[_location])
+	{
+		int session_id = n->get_session_id();
+		msg_que.emplace(session_id, msg);
+	}
 }
 
 void Game_room::broadcast_hp(int _location)
@@ -222,11 +218,21 @@ void Game_room::broadcast_hp(int _location)
 	typedef std::pair<int, int>life_info;
 	std::vector<life_info>life_set;
 	for (const auto& n : location[_location])
-		life_set.emplace_back(n->get_session_id(), n->get_hp_id());
-	auto msg = std::make_shared<Proto_msg>(1, 53);
+		life_set.emplace_back(n->get_game_id(), n->get_hp_id());
+	auto msg = std::make_shared<Proto_msg>(1, 54);
 	serialize_obj(msg->body, life_set);
+	std::cerr << msg->body << "-----------------------------------------------------\n";
 	for (const auto& n : location[_location])
 		msg_que.emplace(n->get_session_id(), msg);
+}
+
+void Game_room::broadcast_base_info()
+{
+	for (int i = 0; i < location.size(); i++)
+	{
+		broadcast_hp(i);
+		broadcast_location(i);
+	}
 }
 
 void Game_room::push_state_code(int session_id, const state_code& sc)
@@ -266,5 +272,35 @@ void Game_room::mine(int session_id)
 	push_state_code(session_id, sc);
 	if (sc == CODE::MINE_SUCCESS)
 		mine_que.emplace(session_id);
+}
 
+void Game_room::switch_stage_calc()
+{
+	while (!heal_que.empty())
+	{
+		auto& [src, des] = heal_que.front();
+		player[src]->heal(*player[des]);
+		heal_que.pop();
+	}
+	while (!atk_que.empty())
+	{
+		auto& [src, des] = atk_que.front();
+		player[src]->attack(*player[des]);
+		atk_que.pop();
+	}
+	while (!mine_que.empty())
+	{
+		auto& n = mine_que.front();
+		player[n]->mine();
+		mine_que.pop();
+	}
+	while (!move_que.empty())
+	{
+		auto& [src, des] = move_que.front();
+		location[player[src]->get_location()].erase(player[src]);
+		location[des].insert(player[src]);
+		player[src]->move(des);
+		move_que.pop();
+	}
+	broadcast_base_info();
 }

@@ -1,5 +1,6 @@
 #pragma once
 #include "../general_class/state_code.h"
+#include <memory>
 class Actionable_character
 {
 	static constexpr int MAX_HP = 10;
@@ -19,15 +20,16 @@ public:
 	//state_code try_buy();
 	virtual void next_turn();
 	//virtual void next_day();
+	bool operator==(const Actionable_character& character)const;
 	Actionable_character(int game_id, int session_id);
 private:
 	int character_id;
 	int game_id;
-	int HP;
+	int HP = 10;
 	int armo;
 	int bandage;
 	int coin;
-	int location;
+	int location = 0;
 	int session_id;
 	bool action_flag = true;
 	bool alive_flag = true;

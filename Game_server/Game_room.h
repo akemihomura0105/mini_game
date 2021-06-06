@@ -3,6 +3,7 @@
 #include "ID_generator.h"
 #include "Character_factory.h"
 #include "../general_class/Game_proto.h"
+#include "../general_class/stage_time.h"
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/serialization/serialization.hpp>
@@ -20,6 +21,7 @@
 class Game_room :public std::enable_shared_from_this<Game_room>
 {
 	friend class Room_property;
+
 public:
 	struct Room_property
 	{
@@ -119,8 +121,7 @@ private:
 
 	//convert the list form to the unordered_map form.
 	void load_player();
-	std::chrono::seconds get_duration_since_last_stage();
-	bool switch_stage(std::chrono::seconds sec);
+	std::chrono::seconds get_duration();
 	void ready_stage(bool exec);
 	void depature_stage0(bool exec);
 	void depature_stage1(bool exec);
@@ -129,7 +130,9 @@ private:
 	void broadcast_character();
 	void broadcast_location(int location);
 	void broadcast_hp(int location);
+	void broadcast_base_info();
 
 	void push_state_code(int session_id, const state_code& sc);
+	void switch_stage_calc();
 
 };

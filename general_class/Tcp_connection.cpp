@@ -76,7 +76,7 @@ void Tcp_connection::push_event(std::shared_ptr<Proto_msg> msg_ptr)
 ASYNC_RET Tcp_connection::send_event(const boost::system::error_code& ec)
 {
 	if (pause_flag)
-		return;
+		return;	
 	if (socket_error_solve(ec))
 		return;
 	if (!event_que.empty())

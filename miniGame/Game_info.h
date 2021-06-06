@@ -1,5 +1,6 @@
 #pragma once
 #include"Otp_table.h"
+#include"../general_class/stage_time.h"
 #include<chrono>
 #include<vector>
 #include<string>
@@ -22,7 +23,8 @@ struct basic_game_info
 	int turn = 0;
 	int action_point;
 	int location = 0;
-	enum class STAGE { READY, DAYTIME, NIGHT };
+	int game_id = 0;
+	enum class STAGE { READY, DEPATURE0, DEPATURE1, DAYTIME, NIGHT };
 	STAGE stage;
 	std::vector<player_info>player;
 	friend std::ostream& operator<<(std::ostream& os, const basic_game_info& info);

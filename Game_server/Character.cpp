@@ -86,7 +86,7 @@ state_code Actionable_character::move(int target_location, bool try_flag)
 		sc.set(CODE::NO_ACTION);
 		return sc;
 	}
-	if (location != target_location)
+	if (location == target_location)
 	{
 		sc.set(CODE::MOVE_TO_SAME_LOCATION);
 		return sc;
@@ -148,6 +148,11 @@ state_code Actionable_character::mine(bool try_flag)
 void Actionable_character::next_turn()
 {
 	action_flag = true;
+}
+
+bool Actionable_character::operator==(const Actionable_character& character) const
+{
+	return session_id == character.session_id;
 }
 
 Actionable_character::Actionable_character(int _game_id, int _session_id) :game_id(_game_id), session_id(_session_id)

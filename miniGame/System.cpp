@@ -196,7 +196,20 @@ ASYNC_RET System::route()
 	case 52:
 	{
 		receive_state_code_result(msg);
+		break;
 	}
+	case 53:
+	{
+		receive_location_info(msg);
+		break;
+	}
+	case 54:
+	{
+		receive_hp_info(msg);
+		break;
+	}
+
+
 
 	default:
 		std::cerr << "unknown package" << std::endl;
@@ -245,10 +258,6 @@ ASYNC_RET System::message_route()
 			heal(game_id);
 		}
 	}
-
-
-
-
 
 	if (*input == "?")
 	{
@@ -378,6 +387,8 @@ void System::create_game_info(std::shared_ptr<Proto_msg>msg)
 	{
 		game_info->player[p].name = ite->name;
 		game_info->player[p].session_id = ite->session_id;
+		if (ite->session_id == session_id)
+			game_info->game_id = p;
 	}
 	game_info->character_id = character_id;
 	std::cout << *game_info << "\n";
@@ -441,6 +452,28 @@ void System::receive_state_code_result(std::shared_ptr<Proto_msg> msg)
 		game_info->coin += 3;
 	}
 	std::cout << sc.message();
+}
+
+void System::receive_hp_info(std::shared_ptr<Proto_msg> msg)
+{
+	typedef std::pair<int, int>life_info;
+	std::vector<life_info>hp_set;
+	std::cerr << msg->body << "------------------------------------------\n";
+	deserialize_obj(msg->body, hp_set);
+	for (const auto& p : hp_set)
+		game_info->player[p.first].HP = p.second;
+}
+
+void System::receive_location_info(std::shared_ptr<Proto_msg>msg)
+{
+	std::vector<int>location_set;
+	deserialize_obj(msg->body, location_set);
+	for (int i = 1; i < location_set.size(); i++)
+	{
+		if (location_set[i] == game_info->game_id)
+			game_info->location = location_set[0];
+		game_info->player[location_set[i]].location = location_set[0];
+	}
 }
 
 System::System(io_context& _io, ip::tcp::endpoint& _ep) :io(_io), ep(_ep)

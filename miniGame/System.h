@@ -6,6 +6,7 @@
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/serialization/vector.hpp>
+#include <boost/serialization/utility.hpp>
 #include <memory>
 #include <list>
 #include "../general_class/Game_proto.h"
@@ -75,4 +76,6 @@ private:
 	void heal(int game_id);
 	void mine();
 	void receive_state_code_result(std::shared_ptr<Proto_msg>msg);
+	void receive_location_info(std::shared_ptr<Proto_msg>msg);
+	void receive_hp_info(std::shared_ptr<Proto_msg>msg);
 };
