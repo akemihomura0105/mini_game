@@ -80,7 +80,8 @@ private:
 	Room_property prop;
 	std::list<int>users;
 	int rome_owner = 0;
-	enum class STAGE { READY, DAYTIME, NIGHT };
+	enum class STAGE { READY, DEPATURE0, DEPATURE1, DAYTIME, NIGHT };
+	STAGE get_current_stage();
 	int turn_num;
 
 	//ÓÎÏ·½×¶Î£º
@@ -125,9 +126,10 @@ private:
 	void ready_stage(bool exec);
 	void depature_stage0(bool exec);
 	void depature_stage1(bool exec);
+	void daytime_stage(bool exec);
 	std::vector<int>get_session_set(int location);
 	void broadcast_time();
-	void broadcast_character();
+	void broadcast_game_info();
 	void broadcast_location(int location);
 	void broadcast_hp(int location);
 	void broadcast_base_info();

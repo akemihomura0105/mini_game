@@ -136,7 +136,8 @@ void Actionable_character::next_turn()
 	action_flag = true;
 }
 
-Actionable_character::Actionable_character(int _game_id, int _session_id) :game_id(_game_id), session_id(_session_id)
+Actionable_character::Actionable_character(int _game_id, int _session_id, int _HP, int _armo, int _bandage, int _coin) :
+	game_id(_game_id), session_id(_session_id), HP(_HP), armo(_armo), bandage(_bandage), coin(_coin)
 {
 }
 
@@ -173,12 +174,15 @@ void Treasure_hunter::explore()
 
 }
 
-Treasure_hunter::Treasure_hunter(int game_id, int session_id) :Actionable_character(game_id, session_id)
+Treasure_hunter::Treasure_hunter(int game_id, int session_id) :Actionable_character(game_id, session_id,
+	7, 5, 1, 0)
 {
 	set_character_id(1);
+
 }
 
-Evil_spirit::Evil_spirit(int game_id, int session_id) : Actionable_character(game_id, session_id)
+Evil_spirit::Evil_spirit(int game_id, int session_id) : Actionable_character(game_id, session_id,
+	7, 5, 0, 0)
 {
 	set_character_id(2);
 }

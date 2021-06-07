@@ -43,6 +43,7 @@ private:
 	void show_room(std::shared_ptr<Proto_msg>msg);
 	void create_room(std::shared_ptr<Proto_msg>msg);
 	void join_room(std::shared_ptr<Proto_msg>msg);
+	void exit_room(int session_id, int room_id);
 	void exit_room(std::shared_ptr<Proto_msg>msg);
 
 	void set_ready(std::shared_ptr<Proto_msg>msg);

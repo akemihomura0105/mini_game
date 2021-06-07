@@ -8,7 +8,9 @@ public:
 	int get_session_id()const;
 	int get_character_id()const;
 	int get_game_id()const;
-	int get_hp_id()const;
+	int get_hp()const;
+	int get_armo()const;
+	int get_bandage()const;
 	int get_location()const;
 	void set_character_id(int n);
 	void get_damage(int n);

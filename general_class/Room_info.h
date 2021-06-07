@@ -16,10 +16,10 @@ struct Room_prop
 		ar& size;
 		ar& capacity;
 	}
-	std::string name;
-	int id;
-	int size;
-	int capacity;
+	std::string name = {};
+	int id = 0;
+	int size = 0;
+	int capacity = 0;
 };
 
 struct Room_info

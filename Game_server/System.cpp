@@ -23,7 +23,7 @@ void System::close(std::shared_ptr<Proto_msg>msg)
 		auto user = session_to_user[session_id];
 		//release from room
 		if (user->get_room_id())
-			room[user->get_room_id()]->remove_user(session_id, user);
+			exit_room(session_id, user->get_room_id());
 		username_to_session.erase(session_to_user[session_id]->get_username());
 		//release from user
 		session_to_user[session_id].reset();
@@ -133,21 +133,19 @@ void System::join_room(std::shared_ptr<Proto_msg> msg)
 	deserialize_obj(msg->body, session_id, room_id);
 	state_code sc;
 	auto res_msg = std::make_shared<Proto_msg>(1, 5);
-	if (room_id >= room.size() || room[room_id]->get_id() == 0)
+	if (room_id >= room.size() || room[room_id] == nullptr)
 		sc.set(CODE::ROOM_NOT_EXIST);
 	else
 		if (room[room_id]->add_user(session_id, session_to_user[session_id]) == 1)
 			sc.set(CODE::ROOM_FULL);
 	serialize_obj(res_msg->body, sc);
 	session[session_id]->push_event(res_msg);
-	broadcast_room_info(room_id);
+	if (sc == CODE::NONE)
+		broadcast_room_info(room_id);
 }
 
-void System::exit_room(std::shared_ptr<Proto_msg> msg)
+void System::exit_room(int session_id, int room_id)
 {
-	int session_id;
-	int room_id;
-	deserialize_obj(msg->body, session_id, room_id);
 	int ec = room[room_id]->remove_user(session_id, session_to_user[session_id]);
 	switch (ec)
 	{
@@ -159,6 +157,14 @@ void System::exit_room(std::shared_ptr<Proto_msg> msg)
 	case 2:
 		delete_room(room_id);
 	}
+}
+
+void System::exit_room(std::shared_ptr<Proto_msg> msg)
+{
+	int session_id;
+	int room_id;
+	deserialize_obj(msg->body, session_id, room_id);
+	exit_room(session_id, room_id);
 	auto res_msg = std::make_shared<Proto_msg>(1, 4);
 	serialize_obj(res_msg->body, state_code());
 	session[session_id]->push_event(res_msg);
@@ -197,6 +203,7 @@ void System::listen_room(int room_id)
 	{
 		auto pair = room[room_id]->msg_pop();
 		session[pair.first]->push_event(pair.second);
+		std::cerr << "pair message:\n\t" << pair.first << "\n\t" << pair.second->head.service << "\n\t" << pair.second->body << "\n";
 	}
 	io.post(boost::bind(&System::listen_room, shared_from_this(), room_id));
 }

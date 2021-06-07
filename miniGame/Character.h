@@ -18,7 +18,8 @@ public:
 	//state_code try_buy();
 	virtual void next_turn();
 	//virtual void next_day();
-	Actionable_character(int game_id, int session_id);
+	Actionable_character(int game_id, int session_id,
+		int HP, int armo, int bandage, int coin);
 private:
 	int character_id;
 	int game_id;

@@ -15,9 +15,19 @@ int Actionable_character::get_game_id()const
 	return game_id;
 }
 
-int Actionable_character::get_hp_id() const
+int Actionable_character::get_hp() const
 {
 	return HP;
+}
+
+int Actionable_character::get_armo()const
+{
+	return armo;
+}
+
+int Actionable_character::get_bandage()const
+{
+	return bandage;
 }
 
 int Actionable_character::get_location()const

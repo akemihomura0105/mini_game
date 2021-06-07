@@ -129,13 +129,12 @@ std::chrono::seconds Game_room::get_duration()
 
 void Game_room::ready_stage(bool exec)
 {
-	using namespace std::chrono;
 	if (exec)
 	{
 		std::cerr << "enter the ready stage" << std::endl;
-		broadcast_character();
+		broadcast_game_info();
 	}
-	if (get_duration() >= stage_time::ready)
+	if (get_current_stage() == STAGE::DEPATURE0)
 	{
 		switch_stage_calc();
 		io->post(bind(&Game_room::depature_stage0, shared_from_this(), true));
@@ -146,12 +145,11 @@ void Game_room::ready_stage(bool exec)
 
 void Game_room::depature_stage0(bool exec)
 {
-	using namespace std::chrono;
 	if (exec)
 	{
 		std::cerr << "enter the depature stage0" << std::endl;
 	}
-	if (get_duration() >= stage_time::depature0)
+	if (get_current_stage() == STAGE::DEPATURE1)
 	{
 		switch_stage_calc();
 		io->post(bind(&Game_room::depature_stage1, shared_from_this(), true));
@@ -162,14 +160,31 @@ void Game_room::depature_stage0(bool exec)
 
 void Game_room::depature_stage1(bool exec)
 {
-	using namespace std::chrono;
 	if (exec)
 	{
-
+		std::cerr << "enter the depature stage1" << std::endl;
 	}
-	//if(get_duration()>=stage_time::depature1)
-
+	if (get_current_stage() == STAGE::DAYTIME)
+	{
+		switch_stage_calc();
+		io->post(bind(&Game_room::daytime_stage, shared_from_this(), true));
+	}
+	else
+		io->post(bind(&Game_room::depature_stage1, shared_from_this(), false));
 }
+
+void Game_room::daytime_stage(bool exec)
+{
+	if (exec)
+	{
+		std::cerr << "enter the depature stage1" << std::endl;
+	}
+	if (get_current_stage() == STAGE::DAYTIME)
+	{
+		switch_stage_calc();
+	}
+}
+
 
 void Game_room::broadcast_time()
 {
@@ -188,12 +203,14 @@ void Game_room::broadcast_time()
 	io->post(bind(&Game_room::broadcast_time, shared_from_this()));
 }
 
-void Game_room::broadcast_character()
+void Game_room::broadcast_game_info()
 {
-	auto msg = std::make_shared<Proto_msg>(1, 51);
 	for (const auto& p : player)
 	{
-		serialize_obj(msg->body, p.second->get_character_id());
+		auto msg = std::make_shared<Proto_msg>(1, 51);
+		serialize_obj(msg->body, p.second->get_character_id(), p.second->get_hp(), p.second->get_armo(), p.second->get_bandage());
+		std::cerr << p.first << "-----" << msg->body << "-----" << p.second->get_character_id() << std::endl;
+		msg_que.push(std::make_pair(p.first, msg));
 		msg_que.emplace(p.first, msg);
 	}
 }
@@ -218,10 +235,9 @@ void Game_room::broadcast_hp(int _location)
 	typedef std::pair<int, int>life_info;
 	std::vector<life_info>life_set;
 	for (const auto& n : location[_location])
-		life_set.emplace_back(n->get_game_id(), n->get_hp_id());
+		life_set.emplace_back(n->get_game_id(), n->get_hp());
 	auto msg = std::make_shared<Proto_msg>(1, 54);
 	serialize_obj(msg->body, life_set);
-	std::cerr << msg->body << "-----------------------------------------------------\n";
 	for (const auto& n : location[_location])
 		msg_que.emplace(n->get_session_id(), msg);
 }
@@ -244,7 +260,15 @@ void Game_room::push_state_code(int session_id, const state_code& sc)
 
 void Game_room::change_location(int session_id, int location)
 {
-	auto sc = player[session_id]->move(location, true);
+	state_code sc;
+	auto stage = get_current_stage();
+	if ((stage == STAGE::DEPATURE0 && std::dynamic_pointer_cast<Evil_spirit>(player[session_id]) != nullptr)
+		|| stage == STAGE::DEPATURE1 && std::dynamic_pointer_cast<Evil_spirit>(player[session_id]) == nullptr)
+	{
+		sc.set(NOT_YOUR_MOVE_TURN);
+	}
+	else
+		sc = player[session_id]->move(location, true);
 	push_state_code(session_id, sc);
 	if (sc == CODE::MOVE_SUCCESS)
 		move_que.emplace(session_id, location);
@@ -252,6 +276,9 @@ void Game_room::change_location(int session_id, int location)
 
 void Game_room::attack(int src, int des)
 {
+	auto stage = get_current_stage();
+	if (stage != STAGE::DAYTIME)
+		return;
 	auto sc = player[src]->attack(*player[des], true);
 	push_state_code(src, sc);
 	if (sc == CODE::ATTACK_SUCCESS)
@@ -274,8 +301,28 @@ void Game_room::mine(int session_id)
 		mine_que.emplace(session_id);
 }
 
+Game_room::STAGE Game_room::get_current_stage()
+{
+	using namespace std::chrono;
+	auto s = get_duration();
+	if (0s <= s && s < stage_time::ready)
+		return STAGE::READY;
+	if (stage_time::ready <= s && s < stage_time::depature0)
+		return STAGE::DEPATURE0;
+	if (stage_time::depature0 <= s && s < stage_time::depature1)
+		return STAGE::DEPATURE1;
+	if (stage_time::depature1 <= s && s < stage_time::daytime)
+		return STAGE::DAYTIME;
+	return STAGE::NIGHT;
+}
+
 void Game_room::switch_stage_calc()
 {
+	if (get_current_stage() == STAGE::DAYTIME)
+	{
+		for (auto& p : player)
+			p.second->next_turn();
+	}
 	while (!heal_que.empty())
 	{
 		auto& [src, des] = heal_que.front();

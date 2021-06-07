@@ -378,8 +378,9 @@ void System::start_game()
 
 void System::create_game_info(std::shared_ptr<Proto_msg>msg)
 {
-	int character_id;
-	deserialize_obj(msg->body, character_id);
+	int character_id, hp, armo, bandage;
+	deserialize_obj(msg->body, character_id, hp, armo, bandage);
+	std::cerr << character_id << "---------\n";
 	game_info = std::make_shared<basic_game_info>();
 	game_info->player.resize(room_info.user.size());
 	int p = 0;
@@ -391,15 +392,24 @@ void System::create_game_info(std::shared_ptr<Proto_msg>msg)
 			game_info->game_id = p;
 	}
 	game_info->character_id = character_id;
+	game_info->HP = hp;
+	game_info->armo = armo;
+	game_info->bandage = bandage;
 	std::cout << *game_info << "\n";
 }
 
 void System::change_location(int location)
 {
 	if (!game_info->action_point)
+	{
 		std::cout << "没有足够的体力\n";
+		return;
+	}
 	if (game_info->location == location)
+	{
 		std::cout << "尝试移动至相同的地点\n";
+		return;
+	}
 	auto msg = std::make_shared<Proto_msg>(1, 52);
 	serialize_obj(msg->body, session_id, location, room_id);
 	conn->push_event(msg);
@@ -407,6 +417,21 @@ void System::change_location(int location)
 
 void System::attack(int game_id)
 {
+	if (!game_info->action_point)
+	{
+		std::cout << "没有足够的体力\n";
+		return;
+	}
+	if (game_info->stage != basic_game_info::STAGE::DAYTIME)
+	{
+		std::cout << "现在不是白天\n";
+		return;
+	}
+	if (game_info->armo == 0)
+	{
+		std::cout << "没有弹药\n";
+		return;
+	}
 	int des = game_info->player[game_id].session_id;
 	auto msg = std::make_shared<Proto_msg>(1, 53);
 	serialize_obj(msg->body, session_id, des, room_id);

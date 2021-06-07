@@ -14,6 +14,7 @@ struct player_info
 struct basic_game_info
 {
 	int now_time = 0;
+	int today_time = 0;
 	int character_id, session_id;
 	int coin;
 	int armo;
@@ -30,7 +31,7 @@ struct basic_game_info
 	friend std::ostream& operator<<(std::ostream& os, const basic_game_info& info);
 	void update();
 private:
-	void otp_current_turn()const;
+	STAGE get_current_stage()const;
 
 };
 
