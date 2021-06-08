@@ -15,6 +15,7 @@ int Game_room::add_user(int session_id, std::shared_ptr <User> _user)
 {
 	if (users.size() == prop.capacity)
 		return 1;
+	prop.size++;
 	users.push_back(session_id);
 	_user->set_room_id(get_id());
 	return 0;
@@ -31,6 +32,7 @@ int Game_room::remove_user(int session_id, std::shared_ptr<User> _user)
 	if (ite == users.end())
 		return 1;
 	users.erase(ite);
+	prop.size--;
 	if (users.empty())
 		return 2;
 	_user->set_room_id(0);
@@ -41,8 +43,9 @@ void Game_room::start_game()
 {
 	using namespace std::chrono;
 	load_player();
-	last_time = start_time = steady_clock::now();
+	today_time = start_time = steady_clock::now();
 	last_broadcast_time = 0s;
+	atk_graph.resize(prop.capacity);
 	io->post(bind(&Game_room::ready_stage, shared_from_this(), true));
 	io->post(bind(&Game_room::broadcast_time, shared_from_this()));
 }
@@ -69,8 +72,8 @@ const std::list<int>& Game_room::get_Room_user() const
 	return users;
 }
 
-Game_room::Game_room(io_context* _io) :io(_io) {}
-Game_room::Game_room(const Room_property&& _prop, io_context* _io) : prop(_prop), io(_io) {}
+Game_room::Game_room(io_context* _io) :io(_io), resource_distributor(0) {}
+Game_room::Game_room(const Room_property&& _prop, io_context* _io) : prop(_prop), io(_io), resource_distributor(_prop.capacity) {}
 
 bool Game_room::listen()
 {
@@ -113,9 +116,12 @@ void Game_room::load_player()
 	auto uite = users.begin();
 	auto vite = vec.begin();
 	int game_id = 0;
-	for (; uite != users.end(); uite++)
+	order_player.reserve(prop.capacity);
+	for (; uite != users.end(); uite++, game_id++)
 	{
-		player[*uite] = Character_factory::create(*vite, game_id++, *uite);
+		player[*uite] = Character_factory::create(*vite, game_id, *uite);
+		session_to_game[*uite] = game_id;
+		order_player.push_back(player[*uite]);
 		location[0].insert(player[*uite]);
 		vite++;
 	}
@@ -177,14 +183,26 @@ void Game_room::daytime_stage(bool exec)
 {
 	if (exec)
 	{
-		std::cerr << "enter the depature stage1" << std::endl;
+		std::cerr << "enter the daytime" << std::endl;
 	}
-	if (get_current_stage() == STAGE::DAYTIME)
+	auto dura = get_duration();
+	if (dura != last_turn_time && ((dura - CONSTV::depature1).count() % CONSTV::turn_duration == 0))
 	{
+		last_turn_time = dura;
 		switch_stage_calc();
 	}
+	if (get_current_stage() == STAGE::NIGHT)
+	{
+		io->post(bind(&Game_room::night_stage, shared_from_this(), true));
+	}
+	else
+		io->post(bind(&Game_room::daytime_stage, shared_from_this(), false));
 }
 
+void Game_room::night_stage(bool exec)
+{
+
+}
 
 void Game_room::broadcast_time()
 {
@@ -208,7 +226,7 @@ void Game_room::broadcast_game_info()
 	for (const auto& p : player)
 	{
 		auto msg = std::make_shared<Proto_msg>(1, 51);
-		serialize_obj(msg->body, p.second->get_character_id(), p.second->get_hp(), p.second->get_armo(), p.second->get_bandage());
+		serialize_obj(msg->body, p.second->get_character_id(), p.second->get_hp(), p.second->get_res());
 		std::cerr << p.first << "-----" << msg->body << "-----" << p.second->get_character_id() << std::endl;
 		msg_que.push(std::make_pair(p.first, msg));
 		msg_que.emplace(p.first, msg);
@@ -305,13 +323,13 @@ Game_room::STAGE Game_room::get_current_stage()
 {
 	using namespace std::chrono;
 	auto s = get_duration();
-	if (0s <= s && s < stage_time::ready)
+	if (0s <= s && s < CONSTV::ready)
 		return STAGE::READY;
-	if (stage_time::ready <= s && s < stage_time::depature0)
+	if (CONSTV::ready <= s && s < CONSTV::depature0)
 		return STAGE::DEPATURE0;
-	if (stage_time::depature0 <= s && s < stage_time::depature1)
+	if (CONSTV::depature0 <= s && s < CONSTV::depature1)
 		return STAGE::DEPATURE1;
-	if (stage_time::depature1 <= s && s < stage_time::daytime)
+	if (CONSTV::depature1 <= s && s < CONSTV::daytime)
 		return STAGE::DAYTIME;
 	return STAGE::NIGHT;
 }
@@ -331,8 +349,12 @@ void Game_room::switch_stage_calc()
 	}
 	while (!atk_que.empty())
 	{
+		for (int i = 0; i < player.size(); i++)
+			atk_graph[i].clear();
 		auto& [src, des] = atk_que.front();
+		atk_graph[session_to_game[src]].push_back(session_to_game[des]);
 		player[src]->attack(*player[des]);
+		resource_distributor.solve(&atk_graph, &order_player);
 		atk_que.pop();
 	}
 	while (!mine_que.empty())

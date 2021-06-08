@@ -43,7 +43,7 @@ state_code Actionable_character::attack(Actionable_character& character, bool tr
 		sc.set(CODE::NO_ACTION);
 		return sc;
 	}
-	if (armo == 0)
+	if (res.armo == 0)
 	{
 		sc.set(CODE::NO_ARMO);
 		return sc;
@@ -73,7 +73,7 @@ state_code Actionable_character::treasure_hunt(bool try_flag)
 	}
 	if (!try_flag)
 	{
-		coin += bonus;
+		res.coin += bonus;
 		action_flag = false;
 	}
 }
@@ -108,7 +108,7 @@ state_code Actionable_character::heal(Actionable_character& character, bool try_
 		sc.set(CODE::NO_ACTION);
 		return sc;
 	}
-	if (!bandage)
+	if (!res.bandage)
 	{
 		sc.set(CODE::NO_BANDAGE);
 		return sc;
@@ -125,7 +125,7 @@ state_code Actionable_character::heal(Actionable_character& character, bool try_
 	}
 	if (!try_flag)
 	{
-		bandage--;
+		res.bandage--;
 		character.HP++;
 	}
 	return sc;
@@ -136,8 +136,8 @@ void Actionable_character::next_turn()
 	action_flag = true;
 }
 
-Actionable_character::Actionable_character(int _game_id, int _session_id, int _HP, int _armo, int _bandage, int _coin) :
-	game_id(_game_id), session_id(_session_id), HP(_HP), armo(_armo), bandage(_bandage), coin(_coin)
+Actionable_character::Actionable_character(int _game_id, int _session_id, int _HP, Resource&& _res) :
+	game_id(_game_id), session_id(_session_id), HP(_HP), res(_res)
 {
 }
 
@@ -174,15 +174,17 @@ void Treasure_hunter::explore()
 
 }
 
-Treasure_hunter::Treasure_hunter(int game_id, int session_id) :Actionable_character(game_id, session_id,
-	7, 5, 1, 0)
+Treasure_hunter::Treasure_hunter(int game_id, int session_id) :Actionable_character(
+	game_id, session_id, CONSTV::initial_HP,
+	Resource(CONSTV::TH_initial_coin, CONSTV::TH_initial_armo, CONSTV::TH_initial_bandage))
 {
 	set_character_id(1);
 
 }
 
-Evil_spirit::Evil_spirit(int game_id, int session_id) : Actionable_character(game_id, session_id,
-	7, 5, 0, 0)
+Evil_spirit::Evil_spirit(int game_id, int session_id) : Actionable_character(
+	game_id, session_id, CONSTV::initial_HP,
+	Resource(CONSTV::ES_initial_coin, CONSTV::ES_initial_armo, CONSTV::ES_initial_bandage))
 {
 	set_character_id(2);
 }

@@ -138,7 +138,6 @@ int System::make_room(int state = 0)
 void System::exit_room()
 {
 	auto req_msg = std::make_shared<Proto_msg>(1, 4);
-	std::cout << session_id << " " << room_id << std::endl;
 	serialize_obj(req_msg->body, session_id, room_id);
 	conn->push_event(req_msg);
 }
@@ -170,7 +169,6 @@ ASYNC_RET System::route()
 	}
 	std::shared_ptr<Proto_msg> msg = msg_que.front();
 	msg_que.pop();
-	std::cout << msg->head.service << std::endl;
 	switch (msg->head.service)
 	{
 	case 6:
@@ -221,45 +219,49 @@ ASYNC_RET System::message_route()
 {
 	if (state == STATE::HALL)
 		return hall_system_run();
-	auto input = input_que.try_pop();
-	if (input == nullptr)
+	auto input_ptr = input_que.try_pop();
+	if (input_ptr == nullptr)
 	{
 		io.post(bind(&System::message_route, shared_from_this()));
 		return;
 	}
+	std::string_view input = *input_ptr;
 	if (state == STATE::ROOM)
 	{
-		if (*input == "q")
+		if (input == "q")
 		{
 			exit_room();
 			state = STATE::HALL;
 		}
-		if (*input == "sr")
+		if (input == "sr")
 			set_ready();
-		if (*input == "sg")
+		if (input == "sg")
 			start_game();
 	}
 
 	if (state == STATE::GAME)
 	{
-		if (input->size() >= 3 && input->substr(0, 2) == "mv")
+		if (input.size() >= 3 && input.substr(0, 2) == "mv")
 		{
-			int val = (*input)[2] - '0';
+			int val = input[2] - '0';
 			change_location(val);
 		}
-		if (input->size() >= 4 && input->substr(0, 3) == "atk")
+		if (input.size() >= 4 && input.substr(0, 3) == "atk")
 		{
-			int game_id = (*input)[3] - '0';
+			int game_id = input[3] - '0';
 			attack(game_id);
 		}
-		if (input->size() >= 5 && input->substr(0, 4) == "heal")
+		if (input.size() >= 5 && input.substr(0, 4) == "heal")
 		{
-			int game_id = (*input)[4] - '0';
+			int game_id = input[4] - '0';
 			heal(game_id);
 		}
+		if (input.size() == 4 && input.substr(0, 4) == "mine")
+		{
+			mine();
+		}
 	}
-
-	if (*input == "?")
+	if (input == "?")
 	{
 		if (state == STATE::ROOM)
 			otp_room_operation();
@@ -322,12 +324,13 @@ void System::room_system_run()
 	//io.post(bind(&System::read_input, shared_from_this()));
 	std::thread input_t(bind(&System::read_input, shared_from_this()));
 	input_t.detach();
+	io.run();
 }
 
 void System::sync_time(std::shared_ptr<Proto_msg>msg)
 {
-	std::cout << msg->body;
 	deserialize_obj(msg->body, game_info->now_time);
+	std::cout << "当前时间：" << game_info->now_time << "\n";
 	game_info->update();
 }
 
@@ -378,8 +381,9 @@ void System::start_game()
 
 void System::create_game_info(std::shared_ptr<Proto_msg>msg)
 {
-	int character_id, hp, armo, bandage;
-	deserialize_obj(msg->body, character_id, hp, armo, bandage);
+	int character_id, hp;
+	Resource res;
+	deserialize_obj(msg->body, character_id, hp, res);
 	std::cerr << character_id << "---------\n";
 	game_info = std::make_shared<basic_game_info>();
 	game_info->player.resize(room_info.user.size());
@@ -393,9 +397,23 @@ void System::create_game_info(std::shared_ptr<Proto_msg>msg)
 	}
 	game_info->character_id = character_id;
 	game_info->HP = hp;
-	game_info->armo = armo;
-	game_info->bandage = bandage;
+	game_info->res = res;
 	std::cout << *game_info << "\n";
+}
+
+bool System::daytime_action_check()
+{
+	if (!game_info->action_point)
+	{
+		std::cout << "没有足够的体力\n";
+		return true;
+	}
+	if (game_info->stage != basic_game_info::STAGE::DAYTIME)
+	{
+		std::cout << "现在不是白天\n";
+		return true;
+	}
+	return false;
 }
 
 void System::change_location(int location)
@@ -417,17 +435,9 @@ void System::change_location(int location)
 
 void System::attack(int game_id)
 {
-	if (!game_info->action_point)
-	{
-		std::cout << "没有足够的体力\n";
+	if (daytime_action_check())
 		return;
-	}
-	if (game_info->stage != basic_game_info::STAGE::DAYTIME)
-	{
-		std::cout << "现在不是白天\n";
-		return;
-	}
-	if (game_info->armo == 0)
+	if (game_info->res.armo == 0)
 	{
 		std::cout << "没有弹药\n";
 		return;
@@ -440,6 +450,13 @@ void System::attack(int game_id)
 
 void System::heal(int game_id)
 {
+	if (daytime_action_check())
+		return;
+	if (game_info->res.bandage == 0)
+	{
+		std::cout << "没有绷带\n";
+		return;
+	}
 	int des = game_info->player[game_id].session_id;
 	auto msg = std::make_shared<Proto_msg>(1, 54);
 	serialize_obj(msg->body, session_id, des, room_id);
@@ -448,6 +465,8 @@ void System::heal(int game_id)
 
 void System::mine()
 {
+	if (daytime_action_check())
+		return;
 	auto msg = std::make_shared<Proto_msg>(1, 55);
 	serialize_obj(msg->body, session_id, room_id);
 	conn->push_event(msg);
@@ -464,17 +483,17 @@ void System::receive_state_code_result(std::shared_ptr<Proto_msg> msg)
 	if (sc == CODE::ATTACK_SUCCESS)
 	{
 		game_info->action_point = false;
-		game_info->armo--;
+		game_info->res.armo--;
 	}
 	if (sc == CODE::HEAL_SUCCESS)
 	{
 		game_info->action_point = false;
-		game_info->bandage--;
+		game_info->res.bandage--;
 	}
 	if (sc == CODE::MINE_SUCCESS)
 	{
 		game_info->action_point = false;
-		game_info->coin += 3;
+		game_info->res.coin += CONSTV::MINE_COIN;
 	}
 	std::cout << sc.message();
 }
@@ -483,7 +502,6 @@ void System::receive_hp_info(std::shared_ptr<Proto_msg> msg)
 {
 	typedef std::pair<int, int>life_info;
 	std::vector<life_info>hp_set;
-	std::cerr << msg->body << "------------------------------------------\n";
 	deserialize_obj(msg->body, hp_set);
 	for (const auto& p : hp_set)
 		game_info->player[p.first].HP = p.second;

@@ -111,9 +111,7 @@ void System::create_room(std::shared_ptr<Proto_msg> msg)
 	int session_id;
 	Game_room::Room_property room_property(true);
 	deserialize_obj(msg->body, session_id, room_property.name, room_property.capacity);
-	room_property.size = 1;
 	std::cerr << "receive a room msg from " << session_id << ", room name is: " << room_property.name << ", room capacity is " << room_property.capacity << "\n";
-
 	auto game_room = std::make_shared<Game_room>(std::move(room_property), &io);
 	int room_id = game_room->get_id();
 	while (room_id >= room.size())
@@ -312,6 +310,9 @@ void System::route()
 		break;
 	case 54:
 		heal(msg);
+		break;
+	case 55:
+		mine(msg);
 		break;
 	case 100:
 	{

@@ -1,9 +1,10 @@
 #pragma once
 #include "../general_class/state_code.h"
+#include "../general_class/Resource.h"
+#include "../general_class/game_const_value.h"
 #include <memory>
 class Actionable_character
 {
-	static constexpr int MAX_HP = 10;
 public:
 	int get_session_id()const;
 	int get_character_id()const;
@@ -12,6 +13,10 @@ public:
 	int get_armo()const;
 	int get_bandage()const;
 	int get_location()const;
+	const Resource& get_res()const;
+	void set_res(Resource& res);
+	void clear_res();
+	bool isalive()const;
 	void set_character_id(int n);
 	void get_damage(int n);
 	virtual state_code attack(Actionable_character& character, bool try_flag = false);
@@ -23,18 +28,16 @@ public:
 	virtual void next_turn();
 	//virtual void next_day();
 	bool operator==(const Actionable_character& character)const;
-	Actionable_character(int game_id, int session_id);
+	Actionable_character(int game_id, int session_id,
+		int HP, Resource&& res);
 private:
 	int character_id;
 	int game_id;
-	int HP = 10;
-	int armo;
-	int bandage;
-	int coin;
+	int HP = CONSTV::initial_HP;
+	Resource res;
 	int location = 0;
 	int session_id;
 	bool action_flag = true;
-	bool alive_flag = true;
 };
 
 class Treasure_hunter :public Actionable_character

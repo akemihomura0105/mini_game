@@ -71,6 +71,7 @@ private:
 
 	std::shared_ptr<basic_game_info>game_info;
 	void create_game_info(std::shared_ptr<Proto_msg>msg);
+	bool daytime_action_check();
 	void change_location(int location);
 	void attack(int game_id);
 	void heal(int game_id);

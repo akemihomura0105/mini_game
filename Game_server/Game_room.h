@@ -3,7 +3,8 @@
 #include "ID_generator.h"
 #include "Character_factory.h"
 #include "../general_class/Game_proto.h"
-#include "../general_class/stage_time.h"
+#include "../general_class/game_const_value.h"
+#include "Resource_distributor.h"
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/serialization/serialization.hpp>
@@ -39,7 +40,7 @@ public:
 		//房间id
 		std::shared_ptr<ID<int>> id = nullptr;
 		//房间当前用户数
-		int size;
+		int size = 0;
 		//房间容量
 		int capacity;
 		Room_property(bool init = false);
@@ -98,6 +99,9 @@ private:
 
 	//Mapping from the session_id to the character.
 	std::unordered_map<int, std::shared_ptr<Actionable_character>>player;
+
+	std::vector<std::shared_ptr<Actionable_character>>order_player;
+	std::unordered_map<int, int>session_to_game;
 	//event que, the system will read from this queue to send message to client.
 	std::queue<std::pair<int, std::shared_ptr<Proto_msg>>>msg_que;
 
@@ -107,6 +111,7 @@ private:
 	//attack tuple, define the attack action.@1 means src's session_id, @2means des's session_id.
 	typedef std::tuple<int, int>atk_tuple;
 	std::queue<atk_tuple>atk_que;
+	Resource_distributor resource_distributor;
 	std::queue<int>mine_que;
 	//move tuple, define the move action. @1 means src's session_id, @2means des's location id.
 	typedef std::tuple<int, int>move_tuple;
@@ -117,7 +122,9 @@ private:
 	//Game start time.
 	std::chrono::time_point<std::chrono::steady_clock>start_time;
 	//End time of the last turn.
-	std::chrono::time_point<std::chrono::steady_clock>last_time;
+	std::chrono::seconds last_turn_time;
+	std::chrono::time_point<std::chrono::steady_clock>today_time;
+
 	std::chrono::milliseconds last_broadcast_time;
 
 	//convert the list form to the unordered_map form.
@@ -127,6 +134,7 @@ private:
 	void depature_stage0(bool exec);
 	void depature_stage1(bool exec);
 	void daytime_stage(bool exec);
+	void night_stage(bool exec);
 	std::vector<int>get_session_set(int location);
 	void broadcast_time();
 	void broadcast_game_info();
@@ -135,6 +143,7 @@ private:
 	void broadcast_base_info();
 
 	void push_state_code(int session_id, const state_code& sc);
-	void switch_stage_calc();
 
+	std::vector<std::list<int>>atk_graph;
+	void switch_stage_calc();
 };

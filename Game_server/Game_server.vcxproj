@@ -150,6 +150,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\general_class\Game_proto.cpp" />
+    <ClCompile Include="..\general_class\Resource.cpp" />
     <ClCompile Include="..\general_class\state_code.cpp" />
     <ClCompile Include="..\general_class\Tcp_connection.cpp" />
     <ClCompile Include="..\general_class\User_info.cpp" />
@@ -157,13 +158,15 @@
     <ClCompile Include="Character_factory.cpp" />
     <ClCompile Include="Game_room.cpp" />
     <ClCompile Include="Game_server.cpp" />
+    <ClCompile Include="Resource_distributor.cpp" />
     <ClCompile Include="System.cpp" />
     <ClCompile Include="User.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\general_class\Game_proto.h" />
+    <ClInclude Include="..\general_class\Resource.h" />
     <ClInclude Include="..\general_class\Room_info.h" />
-    <ClInclude Include="..\general_class\stage_time.h" />
+    <ClInclude Include="..\general_class\game_const_value.h" />
     <ClInclude Include="..\general_class\state_code.h" />
     <ClInclude Include="..\general_class\Tcp_connection.h" />
     <ClInclude Include="..\general_class\User_info.h" />
@@ -171,6 +174,7 @@
     <ClInclude Include="Character_factory.h" />
     <ClInclude Include="Game_room.h" />
     <ClInclude Include="ID_generator.h" />
+    <ClInclude Include="Resource_distributor.h" />
     <ClInclude Include="System.h" />
     <ClInclude Include="User.h" />
   </ItemGroup>

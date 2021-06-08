@@ -13,6 +13,12 @@
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
+    <Filter Include="general.h">
+      <UniqueIdentifier>{a8f4ef10-f7bc-449f-96cc-bc76dc748b13}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="general.cpp">
+      <UniqueIdentifier>{44be4af8-f00f-4229-a1d8-4481f26f1683}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="User.cpp">
@@ -27,9 +33,6 @@
     <ClCompile Include="Game_server.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\general_class\User_info.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="..\general_class\Tcp_connection.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -39,10 +42,19 @@
     <ClCompile Include="Character_factory.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\general_class\Game_proto.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="..\general_class\state_code.cpp">
+      <Filter>general.cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\general_class\Resource.cpp">
+      <Filter>general.cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\general_class\Game_proto.cpp">
+      <Filter>general.cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\general_class\User_info.cpp">
+      <Filter>general.cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="Resource_distributor.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
@@ -56,19 +68,10 @@
     <ClInclude Include="User.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\general_class\state_code.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="ID_generator.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\general_class\User_info.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="..\general_class\Tcp_connection.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="..\general_class\Room_info.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="Character.h">
@@ -77,10 +80,25 @@
     <ClInclude Include="Character_factory.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\general_class\Game_proto.h">
-      <Filter>头文件</Filter>
+    <ClInclude Include="..\general_class\Resource.h">
+      <Filter>general.h</Filter>
     </ClInclude>
-    <ClInclude Include="..\general_class\stage_time.h">
+    <ClInclude Include="..\general_class\Game_proto.h">
+      <Filter>general.h</Filter>
+    </ClInclude>
+    <ClInclude Include="..\general_class\state_code.h">
+      <Filter>general.h</Filter>
+    </ClInclude>
+    <ClInclude Include="..\general_class\game_const_value.h">
+      <Filter>general.h</Filter>
+    </ClInclude>
+    <ClInclude Include="..\general_class\User_info.h">
+      <Filter>general.h</Filter>
+    </ClInclude>
+    <ClInclude Include="..\general_class\Room_info.h">
+      <Filter>general.h</Filter>
+    </ClInclude>
+    <ClInclude Include="Resource_distributor.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

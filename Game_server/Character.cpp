@@ -22,17 +22,37 @@ int Actionable_character::get_hp() const
 
 int Actionable_character::get_armo()const
 {
-	return armo;
+	return res.armo;
 }
 
 int Actionable_character::get_bandage()const
 {
-	return bandage;
+	return res.bandage;
 }
 
 int Actionable_character::get_location()const
 {
 	return location;
+}
+
+const Resource& Actionable_character::get_res()const
+{
+	return res;
+}
+
+void Actionable_character::set_res(Resource& _res)
+{
+	res = _res;
+}
+
+void Actionable_character::clear_res()
+{
+	res.clear();
+}
+
+bool Actionable_character::isalive() const
+{
+	return HP > 0;
 }
 
 void Actionable_character::set_character_id(int n)
@@ -53,12 +73,12 @@ state_code Actionable_character::attack(Actionable_character& character, bool tr
 		sc.set(CODE::NO_ACTION);
 		return sc;
 	}
-	if (armo == 0)
+	if (res.armo == 0)
 	{
 		sc.set(CODE::NO_ARMO);
 		return sc;
 	}
-	if (!character.alive_flag)
+	if (!character.isalive())
 	{
 		sc.set(CODE::OBJECT_HAS_DEAD);
 		return sc;
@@ -83,7 +103,7 @@ state_code Actionable_character::treasure_hunt(bool try_flag)
 	}
 	if (!try_flag)
 	{
-		coin += bonus;
+		res.coin += bonus;
 		action_flag = false;
 	}
 }
@@ -118,24 +138,24 @@ state_code Actionable_character::heal(Actionable_character& character, bool try_
 		sc.set(CODE::NO_ACTION);
 		return sc;
 	}
-	if (!bandage)
+	if (!res.bandage)
 	{
 		sc.set(CODE::NO_BANDAGE);
 		return sc;
 	}
-	if (character.HP == character.MAX_HP)
+	if (character.HP == CONSTV::MAX_HP)
 	{
 		sc.set(CODE::OBJECT_HAS_FULL_HP);
 		return sc;
 	}
-	if (!character.alive_flag)
+	if (!character.isalive())
 	{
 		sc.set(CODE::OBJECT_HAS_DEAD);
 		return sc;
 	}
 	if (!try_flag)
 	{
-		bandage--;
+		res.bandage--;
 		character.HP++;
 	}
 	return sc;
@@ -151,7 +171,7 @@ state_code Actionable_character::mine(bool try_flag)
 	}
 	sc.set(CODE::MINE_SUCCESS);
 	if (!try_flag)
-		coin += 3;
+		res.coin += 3;
 	return sc;
 }
 
@@ -165,7 +185,8 @@ bool Actionable_character::operator==(const Actionable_character& character) con
 	return session_id == character.session_id;
 }
 
-Actionable_character::Actionable_character(int _game_id, int _session_id) :game_id(_game_id), session_id(_session_id)
+Actionable_character::Actionable_character(int _game_id, int _session_id, int _HP, Resource&& _res) :
+	game_id(_game_id), session_id(_session_id), HP(_HP), res(_res)
 {
 }
 
@@ -202,12 +223,17 @@ void Treasure_hunter::explore()
 
 }
 
-Treasure_hunter::Treasure_hunter(int game_id, int session_id) :Actionable_character(game_id, session_id)
+Treasure_hunter::Treasure_hunter(int game_id, int session_id) :Actionable_character(
+	game_id, session_id, CONSTV::initial_HP,
+	Resource(CONSTV::TH_initial_coin, CONSTV::TH_initial_armo, CONSTV::TH_initial_bandage))
 {
 	set_character_id(1);
+
 }
 
-Evil_spirit::Evil_spirit(int game_id, int session_id) : Actionable_character(game_id, session_id)
+Evil_spirit::Evil_spirit(int game_id, int session_id) : Actionable_character(
+	game_id, session_id, CONSTV::initial_HP,
+	Resource(CONSTV::ES_initial_coin, CONSTV::ES_initial_armo, CONSTV::ES_initial_bandage))
 {
 	set_character_id(2);
 }

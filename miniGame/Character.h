@@ -1,5 +1,7 @@
 #pragma once
 #include "../general_class/state_code.h"
+#include "../general_class/Resource.h"
+#include "../general_class/game_const_value.h"
 class Actionable_character
 {
 	static constexpr int MAX_HP = 10;
@@ -19,14 +21,12 @@ public:
 	virtual void next_turn();
 	//virtual void next_day();
 	Actionable_character(int game_id, int session_id,
-		int HP, int armo, int bandage, int coin);
+		int HP, Resource&& res);
 private:
 	int character_id;
 	int game_id;
 	int HP;
-	int armo;
-	int bandage;
-	int coin;
+	Resource res;
 	int location;
 	int session_id;
 	bool action_flag = true;
