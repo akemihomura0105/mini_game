@@ -17,23 +17,23 @@ std::ostream& operator<<(std::ostream& os, const basic_game_info& info)
 
 	os << "当前时间:\t" << info.now_time - info.today_time << "\n";
 	os << "身份:\t" << character_name << "\n";
-	Otp_table table(2);
-	table.insert({ "生命",std::to_string(info.HP) });
-	table.insert({ "地点",std::to_string(info.location) });
-	table.insert({ "弹药",std::to_string(info.res.armo) });
-	table.insert({ "金币",std::to_string(info.res.coin) });
-	table.insert({ "绷带",std::to_string(info.res.bandage) });
+	Otp_table table(5);
+	table.insert({ "生命", "地点", "弹药", "金币", "绷带" });
+
+	table.insert({ std::to_string(info.HP) ,std::to_string(info.location),
+		std::to_string(info.res.armo),std::to_string(info.res.coin) ,std::to_string(info.res.bandage) });
 	os << table;
 	Otp_table other_info(4);
 	other_info.insert({ "id","昵称","地点","生命" });
 	for (int i = 0; i < info.player.size(); i++)
 		other_info.insert({ std::to_string(i),info.player[i].name,std::to_string(info.player[i].location),std::to_string(info.player[i].HP) });
-	os << other_info << "\n";
+	os << other_info;
 	return os;
 }
 
 void basic_game_info::update()
 {
+	static int last_turn_time = 0;
 	using namespace CONSTV;
 	auto tmp = get_current_stage();
 	if (stage != STAGE::DAYTIME && stage == tmp)
@@ -55,12 +55,14 @@ void basic_game_info::update()
 	}
 	if (stage == STAGE::DAYTIME)
 	{
-		if ((now_time - today_time - depature1.count()) % turn_duration == 0)
-			action_point = true;
+		int dura = now_time - today_time;
+		if (dura == last_turn_time || (dura - depature1.count()) % turn_duration != 0)
+			return;
+		action_point = true;
+		last_turn_time = dura;
 		std::cout << "白天\n";
 	}
-	if (now_time % 5 == 0)
-		std::cout << *this;
+	std::cout << *this;
 }
 
 basic_game_info::STAGE basic_game_info::get_current_stage()const

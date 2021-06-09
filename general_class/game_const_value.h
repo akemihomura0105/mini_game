@@ -3,12 +3,12 @@
 namespace CONSTV
 {
 	using namespace std::chrono;
-	constexpr seconds ready = 5s;
+	constexpr seconds ready = 3s;
 	constexpr seconds depature0 = ready + 5s;
 	constexpr seconds depature1 = depature0 + 5s;
 	constexpr seconds daytime = depature1 + 40s;
 	constexpr seconds night = daytime + 10s;
-	constexpr int turn_duration = 10;
+	constexpr int turn_duration = 5;
 	constexpr int initial_HP = 1;
 	constexpr int MAX_HP = 7;
 	constexpr int MINE_COIN = 3;

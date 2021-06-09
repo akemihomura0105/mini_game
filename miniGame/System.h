@@ -79,4 +79,5 @@ private:
 	void receive_state_code_result(std::shared_ptr<Proto_msg>msg);
 	void receive_location_info(std::shared_ptr<Proto_msg>msg);
 	void receive_hp_info(std::shared_ptr<Proto_msg>msg);
+	void receive_res_info(std::shared_ptr<Proto_msg>msg);
 };

@@ -13,7 +13,8 @@ using namespace boost::asio;
 //
 // Fundermental service class.
 // Provide tcp socket encapsulation.
-// Provide a read/write buffer of 65536 bytes in size.
+// Provide a read/write buffer of 6
+// 36 bytes in size.
 // 
 // Provides async parsing of the @obj Proto_msg.
 // After calling the run function, the program will execute the following function:

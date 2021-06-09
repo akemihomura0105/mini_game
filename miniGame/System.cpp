@@ -206,7 +206,11 @@ ASYNC_RET System::route()
 		receive_hp_info(msg);
 		break;
 	}
-
+	case 55:
+	{
+		receive_res_info(msg);
+		break;
+	}
 
 
 	default:
@@ -504,7 +508,11 @@ void System::receive_hp_info(std::shared_ptr<Proto_msg> msg)
 	std::vector<life_info>hp_set;
 	deserialize_obj(msg->body, hp_set);
 	for (const auto& p : hp_set)
+	{
+		if (game_info->game_id == p.first)
+			game_info->HP = p.second;
 		game_info->player[p.first].HP = p.second;
+	}
 }
 
 void System::receive_location_info(std::shared_ptr<Proto_msg>msg)
@@ -517,6 +525,11 @@ void System::receive_location_info(std::shared_ptr<Proto_msg>msg)
 			game_info->location = location_set[0];
 		game_info->player[location_set[i]].location = location_set[0];
 	}
+}
+
+void System::receive_res_info(std::shared_ptr<Proto_msg>msg)
+{
+	deserialize_obj(msg->body, game_info->res);
 }
 
 System::System(io_context& _io, ip::tcp::endpoint& _ep) :io(_io), ep(_ep)

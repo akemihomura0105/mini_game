@@ -260,12 +260,23 @@ void Game_room::broadcast_hp(int _location)
 		msg_que.emplace(n->get_session_id(), msg);
 }
 
+void Game_room::broadcast_res()
+{
+	for (const auto& n : player)
+	{
+		auto msg = std::make_shared<Proto_msg>(1, 55);
+		serialize_obj(msg->body, n.second->get_res());
+		msg_que.emplace(n.first, msg);
+	}
+}
+
 void Game_room::broadcast_base_info()
 {
 	for (int i = 0; i < location.size(); i++)
 	{
 		broadcast_hp(i);
 		broadcast_location(i);
+		broadcast_res();
 	}
 }
 

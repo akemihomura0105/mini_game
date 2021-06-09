@@ -140,6 +140,7 @@ private:
 	void broadcast_game_info();
 	void broadcast_location(int location);
 	void broadcast_hp(int location);
+	void broadcast_res();
 	void broadcast_base_info();
 
 	void push_state_code(int session_id, const state_code& sc);
