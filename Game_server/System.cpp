@@ -234,6 +234,13 @@ void System::mine(std::shared_ptr<Proto_msg> msg)
 	room[room_id]->mine(session_id);
 }
 
+void System::bid(std::shared_ptr<Proto_msg>msg)
+{
+	int session_id, room_id, price;
+	deserialize_obj(msg->body, session_id, room_id, price);
+	room[room_id]->bid(session_id, price);
+}
+
 void System::broadcast_room_info(int room_id)
 {
 	Room_info info;
@@ -313,6 +320,9 @@ void System::route()
 		break;
 	case 55:
 		mine(msg);
+		break;
+	case 56:
+		bid(msg);
 		break;
 	case 100:
 	{

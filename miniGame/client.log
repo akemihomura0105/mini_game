@@ -6,89 +6,76 @@
 30
 60-------------------------------
 service_id: 6	len：60
-68-------------------------------
-service_id: 6	len：68
-68-------------------------------
-service_id: 6	len：68
 接收到字符串:sr
 push a event: service_id: 7	len: 0
 send_event:
 	service_id: 7
 	body: 22 serialization::archive 18 0 1
-68-------------------------------
-service_id: 6	len：68
+60-------------------------------
+service_id: 6	len：60
 接收到字符串:sg
 push a event: service_id: 8	len: 0
 send_event:
 	service_id: 8
 	body: 22 serialization::archive 18 0 1
 service_id: 50	len：0
-service_id: 51	len：42
-2---------
-service_id: 51	len：42
-2---------
-service_id: 49	len：30
-service_id: 49	len：30
-service_id: 54	len：48
-service_id: 53	len：38
-service_id: 55	len：38
-service_id: 55	len：38
-service_id: 55	len：38
-service_id: 49	len：30
-service_id: 49	len：30
+service_id: 51	len：43
+1---------
+service_id: 51	len：43
+1---------
 service_id: 49	len：30
 service_id: 49	len：30
 service_id: 49	len：30
 service_id: 54	len：44
 service_id: 53	len：36
-service_id: 55	len：38
-service_id: 55	len：38
-service_id: 55	len：38
+service_id: 55	len：39
+service_id: 55	len：39
+service_id: 55	len：39
 service_id: 49	len：30
 service_id: 49	len：30
+service_id: 54	len：44
+service_id: 53	len：36
+service_id: 55	len：39
+service_id: 55	len：39
+service_id: 55	len：39
+service_id: 49	len：30
+service_id: 49	len：30
+service_id: 49	len：30
+service_id: 54	len：44
+service_id: 53	len：36
+service_id: 55	len：39
+service_id: 55	len：39
+service_id: 55	len：39
+service_id: 49	len：30
+service_id: 54	len：44
+service_id: 53	len：36
+service_id: 55	len：39
+service_id: 55	len：39
+service_id: 55	len：39
 service_id: 49	len：31
-接收到字符串:mv1
-push a event: service_id: 52	len: 0
+service_id: 49	len：31
+service_id: 49	len：31
+service_id: 49	len：31
+service_id: 54	len：44
+service_id: 53	len：36
+service_id: 55	len：39
+service_id: 55	len：39
+service_id: 55	len：39
+service_id: 56	len：39
+service_id: 49	len：31
+service_id: 49	len：31
+接收到字符串:bid10
+push a event: service_id: 56	len: 0
 send_event:
-	service_id: 52
-	body: 22 serialization::archive 18 0 1 1
+	service_id: 56
+	body: 22 serialization::archive 18 0 1 10
 service_id: 52	len：35
-service_id: 49	len：31
-service_id: 49	len：31
-service_id: 55	len：38
-service_id: 54	len：48
-service_id: 53	len：38
-service_id: 55	len：38
-service_id: 55	len：38
-service_id: 49	len：31
-service_id: 55	len：38
-service_id: 54	len：48
-service_id: 53	len：38
-service_id: 55	len：38
-service_id: 55	len：38
+service_id: 56	len：39
 service_id: 49	len：31
 service_id: 49	len：31
 service_id: 49	len：31
-接收到字符串:mine
-push a event: service_id: 55	len: 0
-send_event:
-	service_id: 55
-	body: 22 serialization::archive 18 0 1
-service_id: 52	len：35
+service_id: 57	len：30
+service_id: 55	len：39
 service_id: 49	len：31
-service_id: 55	len：38
-service_id: 54	len：48
-service_id: 53	len：38
-service_id: 55	len：38
-service_id: 55	len：38
-service_id: 49	len：31
-service_id: 49	len：31
-service_id: 49	len：31
-service_id: 49	len：31
-service_id: 49	len：31
-service_id: 55	len：38
-service_id: 54	len：48
-service_id: 53	len：38
-service_id: 55	len：38
-service_id: 55	len：38
-service_id: 49	len：31
+service_id: 49	len：30
+service_id: 49	len：30

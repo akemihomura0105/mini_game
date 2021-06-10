@@ -65,6 +65,16 @@ void Actionable_character::get_damage(int n)
 	HP -= n;
 }
 
+void Actionable_character::add_armo(int n)
+{
+	res.armo += n;
+}
+
+void Actionable_character::add_bandage(int n)
+{
+	res.bandage += n;
+}
+
 state_code Actionable_character::attack(Actionable_character& character, bool try_flag)
 {
 	state_code sc;
@@ -153,6 +163,7 @@ state_code Actionable_character::heal(Actionable_character& character, bool try_
 		sc.set(CODE::OBJECT_HAS_DEAD);
 		return sc;
 	}
+	sc.set(HEAL_SUCCESS);
 	if (!try_flag)
 	{
 		res.bandage--;
@@ -172,6 +183,25 @@ state_code Actionable_character::mine(bool try_flag)
 	sc.set(CODE::MINE_SUCCESS);
 	if (!try_flag)
 		res.coin += 3;
+	return sc;
+}
+
+state_code Actionable_character::bid(Auction_item& item, int price)
+{
+	state_code sc;
+	if (price > get_res().coin)
+	{
+		sc.set(CODE::NO_ENOUGH_MONEY);
+		return sc;
+	}
+	if (item.price >= price)
+	{
+		sc.set(CODE::NO_ENOUGH_MONEY);
+		return sc;
+	}
+	item.price = price;
+	item.bidder = game_id;
+	sc.set(CODE::BID_SUCCESS);
 	return sc;
 }
 

@@ -149,8 +149,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\general_class\Auction_list.cpp" />
     <ClCompile Include="..\general_class\Game_proto.cpp" />
-    <ClCompile Include="..\general_class\Resource.cpp" />
     <ClCompile Include="..\general_class\state_code.cpp" />
     <ClCompile Include="..\general_class\Tcp_connection.cpp" />
     <ClCompile Include="..\general_class\User_info.cpp" />
@@ -163,6 +163,7 @@
     <ClCompile Include="User.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\general_class\Auction_list.h" />
     <ClInclude Include="..\general_class\Game_proto.h" />
     <ClInclude Include="..\general_class\Resource.h" />
     <ClInclude Include="..\general_class\Room_info.h" />

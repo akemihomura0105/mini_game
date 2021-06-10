@@ -62,6 +62,10 @@ void basic_game_info::update()
 		last_turn_time = dura;
 		std::cout << "°×Ìì\n";
 	}
+	if (stage == STAGE::NIGHT)
+	{
+		std::cout << "Ò¹Íí\n";
+	}
 	std::cout << *this;
 }
 

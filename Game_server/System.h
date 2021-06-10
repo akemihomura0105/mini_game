@@ -54,6 +54,7 @@ private:
 	void attack(std::shared_ptr<Proto_msg>msg);
 	void heal(std::shared_ptr<Proto_msg>msg);
 	void mine(std::shared_ptr<Proto_msg>msg);
+	void bid(std::shared_ptr<Proto_msg>msg);
 
 
 

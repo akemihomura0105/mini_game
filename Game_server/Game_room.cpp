@@ -130,7 +130,7 @@ void Game_room::load_player()
 std::chrono::seconds Game_room::get_duration()
 {
 	using namespace std::chrono;
-	return duration_cast<seconds>(steady_clock::now() - start_time);
+	return duration_cast<seconds>(steady_clock::now() - today_time);
 }
 
 void Game_room::ready_stage(bool exec)
@@ -193,15 +193,44 @@ void Game_room::daytime_stage(bool exec)
 	}
 	if (get_current_stage() == STAGE::NIGHT)
 	{
-		io->post(bind(&Game_room::night_stage, shared_from_this(), true));
+		last_bid_time = get_duration();
+		auction_item.reset(1);
+		broadcast_auction_item();
+		io->post(bind(&Game_room::night_stage, shared_from_this(), 0, true));
 	}
 	else
 		io->post(bind(&Game_room::daytime_stage, shared_from_this(), false));
 }
 
-void Game_room::night_stage(bool exec)
+void Game_room::night_stage(int bid_stage, bool exec)
 {
-
+	if (bid_stage > CONSTV::auction_item_num)
+		return;
+	auto dura = get_duration();
+	if (dura - last_bid_time > CONSTV::bidding_time)
+	{
+		if (auction_item.bidder != -1)
+		{
+			broadcast_buyer(auction_item.bidder);
+			if (bid_stage < CONSTV::armo_item_stage)
+				order_player[auction_item.bidder]->add_armo();
+			if (CONSTV::armo_item_stage <= bid_stage && bid_stage < CONSTV::bandage_item_stage)
+				order_player[auction_item.bidder]->add_bandage();
+			broadcast_res(order_player[auction_item.bidder]->get_session_id());
+		}
+		auction_item.reset(auction_item.item_id);
+		if (bid_stage == CONSTV::armo_item_stage)
+			auction_item.reset(2);
+		if (bid_stage == CONSTV::bandage_item_stage)
+		{
+			next_day();
+			io->post(bind(&Game_room::depature_stage0, shared_from_this(), true));
+			return;
+		}
+		io->post(bind(&Game_room::night_stage, shared_from_this(), bid_stage + 1, true));
+	}
+	else
+		io->post(bind(&Game_room::night_stage, shared_from_this(), bid_stage, false));
 }
 
 void Game_room::broadcast_time()
@@ -260,14 +289,39 @@ void Game_room::broadcast_hp(int _location)
 		msg_que.emplace(n->get_session_id(), msg);
 }
 
-void Game_room::broadcast_res()
+void Game_room::broadcast_res(int session_id)
 {
-	for (const auto& n : player)
+	if (session_id == -1)
+	{
+		for (const auto& n : player)
+		{
+			auto msg = std::make_shared<Proto_msg>(1, 55);
+			serialize_obj(msg->body, n.second->get_res());
+			msg_que.emplace(n.first, msg);
+		}
+	}
+	else
 	{
 		auto msg = std::make_shared<Proto_msg>(1, 55);
-		serialize_obj(msg->body, n.second->get_res());
-		msg_que.emplace(n.first, msg);
+		serialize_obj(msg->body, player[session_id]->get_res());
+		msg_que.emplace(session_id, msg);
 	}
+}
+
+void Game_room::broadcast_auction_item()
+{
+	auto msg = std::make_shared<Proto_msg>(1, 56);
+	serialize_obj(msg->body, auction_item);
+	for (const auto& n : player)
+		msg_que.emplace(n.first, msg);
+}
+
+void Game_room::broadcast_buyer(int buyer)
+{
+	auto msg = std::make_shared<Proto_msg>(1, 57);
+	serialize_obj(msg->body, buyer);
+	for (const auto& n : player)
+		msg_que.emplace(n.first, msg);
 }
 
 void Game_room::broadcast_base_info()
@@ -330,6 +384,17 @@ void Game_room::mine(int session_id)
 		mine_que.emplace(session_id);
 }
 
+void Game_room::bid(int session_id, int price)
+{
+	auto sc = player[session_id]->bid(auction_item, price);
+	push_state_code(session_id, sc);
+	if (sc == CODE::BID_SUCCESS)
+	{
+		broadcast_auction_item();
+		last_bid_time = get_duration();
+	}
+}
+
 Game_room::STAGE Game_room::get_current_stage()
 {
 	using namespace std::chrono;
@@ -383,4 +448,11 @@ void Game_room::switch_stage_calc()
 		move_que.pop();
 	}
 	broadcast_base_info();
+}
+
+void Game_room::next_day()
+{
+	for (auto& n : player)
+		n.second->next_turn();
+	today_time = chrono::steady_clock::now();
 }

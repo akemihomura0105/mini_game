@@ -4,6 +4,7 @@
 #include "Character_factory.h"
 #include "../general_class/Game_proto.h"
 #include "../general_class/game_const_value.h"
+#include "../general_class/Auction_list.h"
 #include "Resource_distributor.h"
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>
@@ -75,6 +76,7 @@ public:
 	void attack(int src, int des);
 	void heal(int src, int des);
 	void mine(int session_id);
+	void bid(int session_id, int price);
 private:
 
 	io_context* io;
@@ -112,10 +114,13 @@ private:
 	typedef std::tuple<int, int>atk_tuple;
 	std::queue<atk_tuple>atk_que;
 	Resource_distributor resource_distributor;
+	std::vector<std::list<int>>atk_graph;
 	std::queue<int>mine_que;
 	//move tuple, define the move action. @1 means src's session_id, @2means des's location id.
 	typedef std::tuple<int, int>move_tuple;
 	std::queue<move_tuple>move_que;
+
+	Auction_item auction_item;
 
 	//Mapping from the location to the character.
 	std::vector<std::unordered_set<std::shared_ptr<Actionable_character>>>location;
@@ -123,6 +128,7 @@ private:
 	std::chrono::time_point<std::chrono::steady_clock>start_time;
 	//End time of the last turn.
 	std::chrono::seconds last_turn_time;
+	std::chrono::seconds last_bid_time;
 	std::chrono::time_point<std::chrono::steady_clock>today_time;
 
 	std::chrono::milliseconds last_broadcast_time;
@@ -134,17 +140,19 @@ private:
 	void depature_stage0(bool exec);
 	void depature_stage1(bool exec);
 	void daytime_stage(bool exec);
-	void night_stage(bool exec);
+	void night_stage(int bid_stage, bool exec);
 	std::vector<int>get_session_set(int location);
 	void broadcast_time();
 	void broadcast_game_info();
 	void broadcast_location(int location);
 	void broadcast_hp(int location);
-	void broadcast_res();
+	void broadcast_res(int session_id = -1);
+	void broadcast_auction_item();
+	void broadcast_buyer(int buyer);
 	void broadcast_base_info();
 
 	void push_state_code(int session_id, const state_code& sc);
 
-	std::vector<std::list<int>>atk_graph;
 	void switch_stage_calc();
+	void next_day();
 };

@@ -45,9 +45,6 @@
     <ClCompile Include="..\general_class\state_code.cpp">
       <Filter>general.cpp</Filter>
     </ClCompile>
-    <ClCompile Include="..\general_class\Resource.cpp">
-      <Filter>general.cpp</Filter>
-    </ClCompile>
     <ClCompile Include="..\general_class\Game_proto.cpp">
       <Filter>general.cpp</Filter>
     </ClCompile>
@@ -56,6 +53,9 @@
     </ClCompile>
     <ClCompile Include="Resource_distributor.cpp">
       <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\general_class\Auction_list.cpp">
+      <Filter>general.cpp</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -100,6 +100,9 @@
     </ClInclude>
     <ClInclude Include="Resource_distributor.h">
       <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\general_class\Auction_list.h">
+      <Filter>general.h</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

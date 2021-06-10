@@ -2,7 +2,10 @@
 #include "../general_class/state_code.h"
 #include "../general_class/Resource.h"
 #include "../general_class/game_const_value.h"
+#include "../general_class/Auction_list.h"
 #include <memory>
+#include <algorithm>
+#include <numeric>
 class Actionable_character
 {
 public:
@@ -19,11 +22,15 @@ public:
 	bool isalive()const;
 	void set_character_id(int n);
 	void get_damage(int n);
+	void add_armo(int n = 1);
+	void add_bandage(int n = 1);
 	virtual state_code attack(Actionable_character& character, bool try_flag = false);
 	state_code treasure_hunt(bool try_flag = false);
 	state_code move(int target_location, bool try_flag = false);
 	virtual state_code heal(Actionable_character& character, bool try_flag = false);
 	state_code mine(bool try_flag = false);
+	state_code bid(Auction_item& item, int price);
+
 	//state_code try_buy();
 	virtual void next_turn();
 	//virtual void next_day();

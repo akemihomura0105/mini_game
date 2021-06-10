@@ -211,6 +211,16 @@ ASYNC_RET System::route()
 		receive_res_info(msg);
 		break;
 	}
+	case 56:
+	{
+		receive_bid_info(msg);
+		break;
+	}
+	case 57:
+	{
+		receive_buyer_info(msg);
+		break;
+	}
 
 
 	default:
@@ -263,6 +273,12 @@ ASYNC_RET System::message_route()
 		if (input.size() == 4 && input.substr(0, 4) == "mine")
 		{
 			mine();
+		}
+		if (input.size() >= 3 && input.size() <= 10 && input.substr(0, 3) == "bid")
+		{
+			auto num_str = input.substr(3, input.size() - 3);
+			int val = std::stoi(num_str.data());
+			bid(val);
 		}
 	}
 	if (input == "?")
@@ -476,6 +492,15 @@ void System::mine()
 	conn->push_event(msg);
 }
 
+void System::bid(int price)
+{
+	if (game_info->res.coin < price)
+		std::cout << "没有足够的金钱";
+	auto msg = std::make_shared<Proto_msg>(1, 56);
+	serialize_obj(msg->body, session_id, room_id, price);
+	conn->push_event(msg);
+}
+
 void System::receive_state_code_result(std::shared_ptr<Proto_msg> msg)
 {
 	state_code sc;
@@ -530,6 +555,26 @@ void System::receive_location_info(std::shared_ptr<Proto_msg>msg)
 void System::receive_res_info(std::shared_ptr<Proto_msg>msg)
 {
 	deserialize_obj(msg->body, game_info->res);
+}
+
+void System::receive_bid_info(std::shared_ptr<Proto_msg> msg)
+{
+	Auction_item item;
+	deserialize_obj(msg->body, item);
+	Otp_table table(3);
+	table.insert({ "商品名", "价格", "当前竞拍人" });
+	if (item.bidder != -1)
+		table.insert({ Auction_item::item_name[item.item_id],std::to_string(item.price),game_info->player[item.bidder].name });
+	else
+		table.insert({ Auction_item::item_name[item.item_id],std::to_string(item.price),"无人竞拍" });
+	std::cout << table;
+}
+
+void System::receive_buyer_info(std::shared_ptr<Proto_msg>msg)
+{
+	int game_id;
+	deserialize_obj(msg->body, game_id);
+	std::cout << game_info->player[game_id].name << " 购买了本件商品\n";
 }
 
 System::System(io_context& _io, ip::tcp::endpoint& _ep) :io(_io), ep(_ep)

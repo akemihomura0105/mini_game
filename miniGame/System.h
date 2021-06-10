@@ -12,6 +12,7 @@
 #include "../general_class/Game_proto.h"
 #include "../general_class/state_code.h"
 #include "../general_class/User_info.h"
+#include "../general_class/Auction_list.h"
 #include "Otp_table.h"
 #include "../general_class/Tcp_connection.h"
 #include "../general_class/Room_info.h"
@@ -76,8 +77,11 @@ private:
 	void attack(int game_id);
 	void heal(int game_id);
 	void mine();
+	void bid(int price);
 	void receive_state_code_result(std::shared_ptr<Proto_msg>msg);
 	void receive_location_info(std::shared_ptr<Proto_msg>msg);
 	void receive_hp_info(std::shared_ptr<Proto_msg>msg);
 	void receive_res_info(std::shared_ptr<Proto_msg>msg);
+	void receive_bid_info(std::shared_ptr<Proto_msg>msg);
+	void receive_buyer_info(std::shared_ptr<Proto_msg>msg);
 };
