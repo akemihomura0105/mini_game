@@ -45,6 +45,7 @@ void Game_room::start_game()
 	load_player();
 	today_time = start_time = steady_clock::now();
 	last_broadcast_time = 0s;
+	stage = STAGE::READY;
 	atk_graph.resize(prop.capacity);
 	io->post(bind(&Game_room::ready_stage, shared_from_this(), true));
 	io->post(bind(&Game_room::broadcast_time, shared_from_this()));
@@ -73,7 +74,7 @@ const std::list<int>& Game_room::get_Room_user() const
 }
 
 Game_room::Game_room(io_context* _io) :io(_io), resource_distributor(0) {}
-Game_room::Game_room(const Room_property&& _prop, io_context* _io) : prop(_prop), io(_io), resource_distributor(_prop.capacity) {}
+Game_room::Game_room(const Room_property&& _prop, io_context* _io) : prop(_prop), io(_io), resource_distributor(_prop.capacity), mt(time(0)) {}
 
 bool Game_room::listen()
 {
@@ -186,7 +187,7 @@ void Game_room::daytime_stage(bool exec)
 		std::cerr << "enter the daytime" << std::endl;
 	}
 	auto dura = get_duration();
-	if (dura != last_turn_time && ((dura - CONSTV::depature1).count() % CONSTV::turn_duration == 0))
+	if (dura != last_turn_time && ((dura - CONSTV::depature1).count() % CONSTV::turn_duration.count() == 0))
 	{
 		last_turn_time = dura;
 		switch_stage_calc();
@@ -224,6 +225,7 @@ void Game_room::night_stage(int bid_stage, bool exec)
 		if (bid_stage == CONSTV::bandage_item_stage)
 		{
 			next_day();
+			switch_stage_calc();
 			io->post(bind(&Game_room::depature_stage0, shared_from_this(), true));
 			return;
 		}
@@ -240,7 +242,7 @@ void Game_room::broadcast_time()
 	auto msg = std::make_shared<Proto_msg>(1, 49);
 	seconds interval = 1s;
 	//std::cerr << cnt++ << std::endl;
-	if ((steady_clock::now() - start_time) > last_broadcast_time + interval)
+	if (get_duration() >= last_broadcast_time + interval)
 	{
 		last_broadcast_time += interval;
 		serialize_obj(msg->body, (int)get_duration().count());
@@ -248,6 +250,13 @@ void Game_room::broadcast_time()
 			msg_que.emplace(n.first, msg);
 	}
 	io->post(bind(&Game_room::broadcast_time, shared_from_this()));
+}
+
+void Game_room::broadcast_switch_stage()
+{
+	auto msg = std::make_shared<Proto_msg>(1, 58);
+	for (const auto& n : player)
+		msg_que.emplace(n.first, msg);
 }
 
 void Game_room::broadcast_game_info()
@@ -275,6 +284,15 @@ void Game_room::broadcast_location(int _location)
 		int session_id = n->get_session_id();
 		msg_que.emplace(session_id, msg);
 	}
+}
+
+void Game_room::ghost_sight()
+{
+	typedef std::pair<int, int>pos;
+	std::vector<pos>location_set;
+	for (int i = 0; i < location.size(); i++)
+		for (const auto& n : location[i])
+			location_set.emplace_back(n->get_game_id(), i);
 }
 
 void Game_room::broadcast_hp(int _location)
@@ -344,7 +362,6 @@ void Game_room::push_state_code(int session_id, const state_code& sc)
 void Game_room::change_location(int session_id, int location)
 {
 	state_code sc;
-	auto stage = get_current_stage();
 	if ((stage == STAGE::DEPATURE0 && std::dynamic_pointer_cast<Evil_spirit>(player[session_id]) != nullptr)
 		|| stage == STAGE::DEPATURE1 && std::dynamic_pointer_cast<Evil_spirit>(player[session_id]) == nullptr)
 	{
@@ -359,7 +376,6 @@ void Game_room::change_location(int session_id, int location)
 
 void Game_room::attack(int src, int des)
 {
-	auto stage = get_current_stage();
 	if (stage != STAGE::DAYTIME)
 		return;
 	auto sc = player[src]->attack(*player[des], true);
@@ -412,32 +428,36 @@ Game_room::STAGE Game_room::get_current_stage()
 
 void Game_room::switch_stage_calc()
 {
-	if (get_current_stage() == STAGE::DAYTIME)
+	if (stage == STAGE::DAYTIME)
 	{
 		for (auto& p : player)
-			p.second->next_turn();
-	}
-	while (!heal_que.empty())
-	{
-		auto& [src, des] = heal_que.front();
-		player[src]->heal(*player[des]);
-		heal_que.pop();
-	}
-	while (!atk_que.empty())
-	{
-		for (int i = 0; i < player.size(); i++)
-			atk_graph[i].clear();
-		auto& [src, des] = atk_que.front();
-		atk_graph[session_to_game[src]].push_back(session_to_game[des]);
-		player[src]->attack(*player[des]);
-		resource_distributor.solve(&atk_graph, &order_player);
-		atk_que.pop();
-	}
-	while (!mine_que.empty())
-	{
-		auto& n = mine_que.front();
-		player[n]->mine();
-		mine_que.pop();
+		{
+			auto sc = p.second->action_check();
+			if (sc == CODE::NONE)
+				mine(p.first);
+		}
+		while (!heal_que.empty())
+		{
+			auto& [src, des] = heal_que.front();
+			player[src]->heal(*player[des]);
+			heal_que.pop();
+		}
+		while (!atk_que.empty())
+		{
+			for (int i = 0; i < player.size(); i++)
+				atk_graph[i].clear();
+			auto& [src, des] = atk_que.front();
+			atk_graph[session_to_game[src]].push_back(session_to_game[des]);
+			player[src]->attack(*player[des]);
+			resource_distributor.solve(&atk_graph, &order_player);
+			atk_que.pop();
+		}
+		while (!mine_que.empty())
+		{
+			auto& n = mine_que.front();
+			player[n]->mine();
+			mine_que.pop();
+		}
 	}
 	while (!move_que.empty())
 	{
@@ -447,12 +467,45 @@ void Game_room::switch_stage_calc()
 		player[src]->move(des);
 		move_que.pop();
 	}
+	bool recalc = false;
+	if (stage == STAGE::DEPATURE0)
+	{
+		for (auto& n : location[0])
+		{
+			std::uniform_int_distribution<int> dist(1, location.size() - 1);
+			if (std::dynamic_pointer_cast<Treasure_hunter>(n) != nullptr)
+			{
+				change_location(n->get_session_id(), dist(mt));
+				recalc = true;
+			}
+		}
+	}
+	if (stage == STAGE::DEPATURE1)
+	{
+		for (auto& n : location[0])
+		{
+			std::uniform_int_distribution<int>dist(1, location.size() - 1);
+			if (std::dynamic_pointer_cast<Evil_spirit>(n) != nullptr)
+			{
+				change_location(n->get_session_id(), dist(mt));
+				recalc = true;
+			}
+		}
+		for (auto& p : player)
+			p.second->next_turn();
+	}
+	if (recalc)
+		switch_stage_calc();
 	broadcast_base_info();
+	stage = get_current_stage();
+	broadcast_switch_stage();
 }
 
 void Game_room::next_day()
 {
+	using namespace std::chrono;
 	for (auto& n : player)
 		n.second->next_turn();
-	today_time = chrono::steady_clock::now();
+	today_time = steady_clock::now();
+	last_broadcast_time = 0ms;
 }

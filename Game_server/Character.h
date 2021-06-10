@@ -20,10 +20,12 @@ public:
 	void set_res(Resource& res);
 	void clear_res();
 	bool isalive()const;
+	bool has_action_point()const;
 	void set_character_id(int n);
 	void get_damage(int n);
 	void add_armo(int n = 1);
 	void add_bandage(int n = 1);
+	state_code action_check();
 	virtual state_code attack(Actionable_character& character, bool try_flag = false);
 	state_code treasure_hunt(bool try_flag = false);
 	state_code move(int target_location, bool try_flag = false);

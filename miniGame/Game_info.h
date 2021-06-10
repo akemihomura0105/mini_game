@@ -28,7 +28,7 @@ struct basic_game_info
 	STAGE stage;
 	std::vector<player_info>player;
 	friend std::ostream& operator<<(std::ostream& os, const basic_game_info& info);
-	void update();
+	void next_stage();
 private:
 	STAGE get_current_stage()const;
 

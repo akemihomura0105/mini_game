@@ -221,7 +221,11 @@ ASYNC_RET System::route()
 		receive_buyer_info(msg);
 		break;
 	}
-
+	case 58:
+	{
+		receive_stage_change(msg);
+		break;
+	}
 
 	default:
 		std::cerr << "unknown package" << std::endl;
@@ -351,7 +355,6 @@ void System::sync_time(std::shared_ptr<Proto_msg>msg)
 {
 	deserialize_obj(msg->body, game_info->now_time);
 	std::cout << "当前时间：" << game_info->now_time << "\n";
-	game_info->update();
 }
 
 void System::game_system_run()
@@ -524,7 +527,7 @@ void System::receive_state_code_result(std::shared_ptr<Proto_msg> msg)
 		game_info->action_point = false;
 		game_info->res.coin += CONSTV::MINE_COIN;
 	}
-	std::cout << sc.message();
+	std::cout << sc.message() << "\n";
 }
 
 void System::receive_hp_info(std::shared_ptr<Proto_msg> msg)
@@ -575,6 +578,11 @@ void System::receive_buyer_info(std::shared_ptr<Proto_msg>msg)
 	int game_id;
 	deserialize_obj(msg->body, game_id);
 	std::cout << game_info->player[game_id].name << " 购买了本件商品\n";
+}
+
+void System::receive_stage_change(std::shared_ptr<Proto_msg>msg)
+{
+	game_info->next_stage();
 }
 
 System::System(io_context& _io, ip::tcp::endpoint& _ep) :io(_io), ep(_ep)

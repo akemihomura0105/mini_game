@@ -55,6 +55,11 @@ bool Actionable_character::isalive() const
 	return HP > 0;
 }
 
+bool Actionable_character::has_action_point() const
+{
+	return action_flag;
+}
+
 void Actionable_character::set_character_id(int n)
 {
 	character_id = n;
@@ -75,14 +80,22 @@ void Actionable_character::add_bandage(int n)
 	res.bandage += n;
 }
 
-state_code Actionable_character::attack(Actionable_character& character, bool try_flag)
+state_code Actionable_character::action_check()
 {
 	state_code sc;
 	if (!action_flag)
-	{
 		sc.set(CODE::NO_ACTION);
+	if (!isalive())
+		sc.set(CODE::ALREADY_DEAD);
+	return sc;
+}
+
+state_code Actionable_character::attack(Actionable_character& character, bool try_flag)
+{
+	state_code sc;
+	sc = action_check();
+	if (sc != CODE::NONE)
 		return sc;
-	}
 	if (res.armo == 0)
 	{
 		sc.set(CODE::NO_ARMO);
@@ -106,11 +119,9 @@ state_code Actionable_character::treasure_hunt(bool try_flag)
 {
 	constexpr int bonus = 3;
 	state_code sc;
-	if (!action_flag)
-	{
-		sc.set(CODE::NO_ACTION);
+	sc = action_check();
+	if (sc != CODE::NONE)
 		return sc;
-	}
 	if (!try_flag)
 	{
 		res.coin += bonus;
@@ -121,11 +132,9 @@ state_code Actionable_character::treasure_hunt(bool try_flag)
 state_code Actionable_character::move(int target_location, bool try_flag)
 {
 	state_code sc;
-	if (!action_flag)
-	{
-		sc.set(CODE::NO_ACTION);
+	sc = action_check();
+	if (sc != CODE::NONE)
 		return sc;
-	}
 	if (location == target_location)
 	{
 		sc.set(CODE::MOVE_TO_SAME_LOCATION);
@@ -143,11 +152,9 @@ state_code Actionable_character::move(int target_location, bool try_flag)
 state_code Actionable_character::heal(Actionable_character& character, bool try_flag)
 {
 	state_code sc;
-	if (!action_flag)
-	{
-		sc.set(CODE::NO_ACTION);
+	sc = action_check();
+	if (sc != CODE::NONE)
 		return sc;
-	}
 	if (!res.bandage)
 	{
 		sc.set(CODE::NO_BANDAGE);
@@ -175,11 +182,9 @@ state_code Actionable_character::heal(Actionable_character& character, bool try_
 state_code Actionable_character::mine(bool try_flag)
 {
 	state_code sc;
-	if (!action_flag)
-	{
-		sc.set(CODE::NO_ACTION);
+	sc = action_check();
+	if (sc != CODE::NONE)
 		return sc;
-	}
 	sc.set(CODE::MINE_SUCCESS);
 	if (!try_flag)
 		res.coin += 3;

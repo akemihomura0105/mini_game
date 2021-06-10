@@ -6,9 +6,10 @@ namespace CONSTV
 	constexpr seconds ready = 3s;
 	constexpr seconds depature0 = ready + 3s;
 	constexpr seconds depature1 = depature0 + 3s;
-	constexpr seconds daytime = depature1 + 5s;
+	constexpr int day_turn = 1;
+	constexpr seconds turn_duration = 5s;
+	constexpr seconds daytime = depature1 + day_turn * turn_duration;
 	constexpr seconds night = daytime + 100s;
-	constexpr int turn_duration = 5;
 	constexpr int initial_HP = 2;
 	constexpr int MAX_HP = 7;
 	constexpr int MINE_COIN = 3;

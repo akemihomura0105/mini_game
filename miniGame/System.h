@@ -84,4 +84,6 @@ private:
 	void receive_res_info(std::shared_ptr<Proto_msg>msg);
 	void receive_bid_info(std::shared_ptr<Proto_msg>msg);
 	void receive_buyer_info(std::shared_ptr<Proto_msg>msg);
+	void receive_stage_change(std::shared_ptr<Proto_msg>msg);
+	void next_day();
 };

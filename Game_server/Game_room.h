@@ -80,10 +80,12 @@ public:
 private:
 
 	io_context* io;
+	std::mt19937 mt;
 	Room_property prop;
 	std::list<int>users;
 	int rome_owner = 0;
 	enum class STAGE { READY, DEPATURE0, DEPATURE1, DAYTIME, NIGHT };
+	STAGE stage;
 	STAGE get_current_stage();
 	int turn_num;
 
@@ -143,8 +145,10 @@ private:
 	void night_stage(int bid_stage, bool exec);
 	std::vector<int>get_session_set(int location);
 	void broadcast_time();
+	void broadcast_switch_stage();
 	void broadcast_game_info();
 	void broadcast_location(int location);
+	void ghost_sight();
 	void broadcast_hp(int location);
 	void broadcast_res(int session_id = -1);
 	void broadcast_auction_item();

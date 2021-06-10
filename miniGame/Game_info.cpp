@@ -2,13 +2,6 @@
 
 std::ostream& operator<<(std::ostream& os, const basic_game_info& info)
 {
-	os << "当前阶段:\t";
-	if (info.stage == basic_game_info::STAGE::READY)
-		os << "准备阶段\n";
-	if (info.stage == basic_game_info::STAGE::DEPATURE0)
-		os << "移动阶段0\n";
-	if (info.stage == basic_game_info::STAGE::DEPATURE1)
-		os << "移动阶段1\n";
 	std::string character_name;
 	if (info.character_id == 1)
 		character_name = "探险家\n";
@@ -31,40 +24,51 @@ std::ostream& operator<<(std::ostream& os, const basic_game_info& info)
 	return os;
 }
 
-void basic_game_info::update()
+void basic_game_info::next_stage()
 {
 	static int last_turn_time = 0;
 	using namespace CONSTV;
-	auto tmp = get_current_stage();
-	if (stage != STAGE::DAYTIME && stage == tmp)
-		return;
-	stage = get_current_stage();
-	if (stage == STAGE::DEPATURE0)
+	if (stage == STAGE::READY)
 	{
+		stage = STAGE::DEPATURE0;
 		std::cout << "行动阶段0\n";
 		action_point = true;
 		if (character_id != 1)
 			std::cout << "请进行移动\n";
 	}
-	if (stage == STAGE::DEPATURE1)
+	else if (stage == STAGE::DEPATURE0)
 	{
+		stage = STAGE::DEPATURE1;
 		std::cout << "行动阶段1\n";
 		stage = STAGE::DEPATURE1;
 		if (character_id == 1)
 			std::cout << "请进行移动\n";
 	}
-	if (stage == STAGE::DAYTIME)
+	else if (stage == STAGE::DEPATURE1)
 	{
-		int dura = now_time - today_time;
-		if (dura == last_turn_time || (dura - depature1.count()) % turn_duration != 0)
-			return;
+		stage = STAGE::DAYTIME;
+		turn = 0;
 		action_point = true;
-		last_turn_time = dura;
-		std::cout << "白天\n";
+		std::cout << "白天, 回合: " << turn << "\n";
 	}
-	if (stage == STAGE::NIGHT)
+	else if (stage == STAGE::DAYTIME)
 	{
-		std::cout << "夜晚\n";
+		if (++turn < CONSTV::day_turn)
+		{
+			action_point = true;
+			std::cout << "白天, 回合: " << turn << "\n";
+		}
+		else
+		{
+			stage = STAGE::NIGHT;
+			std::cout << "夜晚\n";
+		}
+	}
+	else if (stage == STAGE::NIGHT)
+	{
+		day++;
+		stage = STAGE::READY;
+		std::cout << "准备阶段, 第" << day + 1 << "天\n";
 	}
 	std::cout << *this;
 }
