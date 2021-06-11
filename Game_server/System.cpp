@@ -241,6 +241,13 @@ void System::bid(std::shared_ptr<Proto_msg>msg)
 	room[room_id]->bid(session_id, price);
 }
 
+void System::explore(std::shared_ptr<Proto_msg> msg)
+{
+	int session_id, room_id;
+	deserialize_obj(msg->body, session_id, room_id);
+	room[room_id]->explore(session_id);
+}
+
 void System::broadcast_room_info(int room_id)
 {
 	Room_info info;
@@ -323,6 +330,9 @@ void System::route()
 		break;
 	case 56:
 		bid(msg);
+		break;
+	case 57:
+		explore(msg);
 		break;
 	case 100:
 	{

@@ -76,6 +76,7 @@ public:
 	void attack(int src, int des);
 	void heal(int src, int des);
 	void mine(int session_id);
+	void explore(int session_id);
 	void bid(int session_id, int price);
 private:
 
@@ -84,7 +85,6 @@ private:
 	Room_property prop;
 	std::list<int>users;
 	int rome_owner = 0;
-	enum class STAGE { READY, DEPATURE0, DEPATURE1, DAYTIME, NIGHT };
 	STAGE stage;
 	STAGE get_current_stage();
 	int turn_num;
@@ -122,6 +122,10 @@ private:
 	typedef std::tuple<int, int>move_tuple;
 	std::queue<move_tuple>move_que;
 
+	std::queue<int>explore_que;
+	typedef std::pair<int, int>treasure_P;
+	std::vector<treasure_P>treasure_vec;
+
 	Auction_item auction_item;
 
 	//Mapping from the location to the character.
@@ -142,7 +146,8 @@ private:
 	void depature_stage0(bool exec);
 	void depature_stage1(bool exec);
 	void daytime_stage(bool exec);
-	void night_stage(int bid_stage, bool exec);
+	void night_stage0(bool exec);
+	void night_stage1(int bid_stage, bool exec);
 	std::vector<int>get_session_set(int location);
 	void broadcast_time();
 	void broadcast_switch_stage();
@@ -151,6 +156,7 @@ private:
 	void ghost_sight();
 	void broadcast_hp(int location);
 	void broadcast_res(int session_id = -1);
+	void broadcast_treasure_info();
 	void broadcast_auction_item();
 	void broadcast_buyer(int buyer);
 	void broadcast_base_info();

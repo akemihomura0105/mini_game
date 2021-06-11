@@ -24,7 +24,10 @@ struct basic_game_info
 	int action_point;
 	int location = 0;
 	int game_id = -1;
-	enum class STAGE { READY, DEPATURE0, DEPATURE1, DAYTIME, NIGHT };
+	int hint = 0;
+
+	typedef std::pair<int, int>treasure_P;
+	std::vector<treasure_P>treasure_vec;
 	STAGE stage;
 	std::vector<player_info>player;
 	friend std::ostream& operator<<(std::ostream& os, const basic_game_info& info);

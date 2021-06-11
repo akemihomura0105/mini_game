@@ -77,11 +77,14 @@ private:
 	void attack(int game_id);
 	void heal(int game_id);
 	void mine();
+	void explore();
 	void bid(int price);
 	void receive_state_code_result(std::shared_ptr<Proto_msg>msg);
 	void receive_location_info(std::shared_ptr<Proto_msg>msg);
 	void receive_hp_info(std::shared_ptr<Proto_msg>msg);
 	void receive_res_info(std::shared_ptr<Proto_msg>msg);
+	void receive_treasure_result(std::shared_ptr<Proto_msg>msg);
+	void receive_treasure_info(std::shared_ptr<Proto_msg>msg);
 	void receive_bid_info(std::shared_ptr<Proto_msg>msg);
 	void receive_buyer_info(std::shared_ptr<Proto_msg>msg);
 	void receive_stage_change(std::shared_ptr<Proto_msg>msg);

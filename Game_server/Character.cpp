@@ -236,7 +236,11 @@ state_code Evil_spirit::attack(Actionable_character& character, bool try_flag)
 	if (!try_flag)
 	{
 		skill_charge_num--;
-		character.get_damage(1);
+		int now_armo = get_res().armo;
+		add_armo();
+		auto sc = Actionable_character::attack(character, try_flag);
+		if (sc != CODE::ATTACK_SUCCESS)
+			add_armo(-1);
 	}
 	return sc;
 }
@@ -253,9 +257,33 @@ void Evil_spirit::next_turn()
 	}
 }
 
-void Treasure_hunter::explore()
+int Treasure_hunter::get_hint() const
 {
+	return hint;
+}
 
+state_code Treasure_hunter::explore(bool try_flag)
+{
+	state_code sc;
+	sc = action_check();
+	if (sc != CODE::NONE)
+		return sc;
+	sc.set(CODE::EXPLORE_RECEIVE);
+	if (!try_flag)
+	{
+		static std::mt19937 mt;
+		std::uniform_real_distribution dist(0.0, 1.0);
+		if (dist(mt) < CONSTV::explore_probability)
+		{
+			sc.set(CODE::EXPLORE_SUCCESS);
+			hint++;
+		}
+		else
+		{
+			sc.set(CODE::EXPLORE_FAILED);
+		}
+	}
+	return sc;
 }
 
 Treasure_hunter::Treasure_hunter(int game_id, int session_id) :Actionable_character(

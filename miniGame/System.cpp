@@ -226,6 +226,16 @@ ASYNC_RET System::route()
 		receive_stage_change(msg);
 		break;
 	}
+	case 59:
+	{
+		receive_treasure_result(msg);
+		break;
+	}
+	case 60:
+	{
+		receive_treasure_info(msg);
+		break;
+	}
 
 	default:
 		std::cerr << "unknown package" << std::endl;
@@ -283,6 +293,10 @@ ASYNC_RET System::message_route()
 			auto num_str = input.substr(3, input.size() - 3);
 			int val = std::stoi(num_str.data());
 			bid(val);
+		}
+		if (input.size() == 3 && input.substr(0, 3) == "exp")
+		{
+			explore();
 		}
 	}
 	if (input == "?")
@@ -431,7 +445,7 @@ bool System::daytime_action_check()
 		std::cout << "没有足够的体力\n";
 		return true;
 	}
-	if (game_info->stage != basic_game_info::STAGE::DAYTIME)
+	if (game_info->stage != STAGE::DAYTIME)
 	{
 		std::cout << "现在不是白天\n";
 		return true;
@@ -495,6 +509,17 @@ void System::mine()
 	conn->push_event(msg);
 }
 
+void System::explore()
+{
+	if (daytime_action_check())
+		return;
+	if (game_info->character_id != 1)
+		return;
+	auto msg = std::make_shared<Proto_msg>(1, 57);
+	serialize_obj(msg->body, session_id, room_id);
+	conn->push_event(msg);
+}
+
 void System::bid(int price)
 {
 	if (game_info->res.coin < price)
@@ -527,6 +552,8 @@ void System::receive_state_code_result(std::shared_ptr<Proto_msg> msg)
 		game_info->action_point = false;
 		game_info->res.coin += CONSTV::MINE_COIN;
 	}
+	if (sc == CODE::EXPLORE_RECEIVE)
+		game_info->action_point = false;
 	std::cout << sc.message() << "\n";
 }
 
@@ -558,6 +585,27 @@ void System::receive_location_info(std::shared_ptr<Proto_msg>msg)
 void System::receive_res_info(std::shared_ptr<Proto_msg>msg)
 {
 	deserialize_obj(msg->body, game_info->res);
+}
+
+void System::receive_treasure_result(std::shared_ptr<Proto_msg> msg)
+{
+	state_code sc;
+	deserialize_obj(msg->body, sc);
+	if (sc == CODE::EXPLORE_SUCCESS)
+	{
+		std::cout << "成功获取线索\n";
+		game_info->hint++;
+	}
+	else
+	{
+		std::cout << "未能获取线索\n";
+	}
+}
+
+void System::receive_treasure_info(std::shared_ptr<Proto_msg> msg)
+{
+	game_info->treasure_vec.clear();
+	deserialize_obj(msg->body, game_info->treasure_vec);
 }
 
 void System::receive_bid_info(std::shared_ptr<Proto_msg> msg)

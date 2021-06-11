@@ -6,6 +6,7 @@
 #include <memory>
 #include <algorithm>
 #include <numeric>
+#include <random>
 class Actionable_character
 {
 public:
@@ -54,7 +55,8 @@ class Treasure_hunter :public Actionable_character
 private:
 	int hint;
 public:
-	void explore();
+	int get_hint()const;
+	state_code explore(bool try_flag = false);
 	Treasure_hunter(int game_id, int session_id);
 };
 

@@ -192,24 +192,41 @@ void Game_room::daytime_stage(bool exec)
 		last_turn_time = dura;
 		switch_stage_calc();
 	}
-	if (get_current_stage() == STAGE::NIGHT)
+	if (get_current_stage() == STAGE::NIGHT0)
 	{
 		last_bid_time = get_duration();
 		auction_item.reset(1);
 		broadcast_auction_item();
-		io->post(bind(&Game_room::night_stage, shared_from_this(), 0, true));
+		io->post(bind(&Game_room::night_stage0, shared_from_this(), true));
 	}
 	else
 		io->post(bind(&Game_room::daytime_stage, shared_from_this(), false));
 }
 
-void Game_room::night_stage(int bid_stage, bool exec)
+void Game_room::night_stage0(bool exec)
+{
+	if (exec)
+	{
+		std::cerr << "enter the night stage0\n";
+		broadcast_treasure_info();
+		treasure_vec.clear();
+		switch_stage_calc();
+	}
+	if (get_current_stage() == STAGE::NIGHT1)
+		io->post(bind(&Game_room::night_stage1, shared_from_this(), 0, true));
+	else
+		io->post(bind(&Game_room::night_stage0, shared_from_this(), false));
+}
+
+void Game_room::night_stage1(int bid_stage, bool exec)
 {
 	if (bid_stage > CONSTV::auction_item_num)
 		return;
 	auto dura = get_duration();
 	if (dura - last_bid_time > CONSTV::bidding_time)
 	{
+		std::cerr << bid_stage << "----------------------------\n";
+		last_bid_time = dura;
 		if (auction_item.bidder != -1)
 		{
 			broadcast_buyer(auction_item.bidder);
@@ -229,10 +246,10 @@ void Game_room::night_stage(int bid_stage, bool exec)
 			io->post(bind(&Game_room::depature_stage0, shared_from_this(), true));
 			return;
 		}
-		io->post(bind(&Game_room::night_stage, shared_from_this(), bid_stage + 1, true));
+		io->post(bind(&Game_room::night_stage1, shared_from_this(), bid_stage + 1, true));
 	}
 	else
-		io->post(bind(&Game_room::night_stage, shared_from_this(), bid_stage, false));
+		io->post(bind(&Game_room::night_stage1, shared_from_this(), bid_stage, false));
 }
 
 void Game_room::broadcast_time()
@@ -326,6 +343,14 @@ void Game_room::broadcast_res(int session_id)
 	}
 }
 
+void Game_room::broadcast_treasure_info()
+{
+	auto msg = std::make_shared<Proto_msg>(1, 60);
+	serialize_obj(msg->body, treasure_vec);
+	for (const auto& p : player)
+		msg_que.emplace(p.first, msg);
+}
+
 void Game_room::broadcast_auction_item()
 {
 	auto msg = std::make_shared<Proto_msg>(1, 56);
@@ -400,6 +425,17 @@ void Game_room::mine(int session_id)
 		mine_que.emplace(session_id);
 }
 
+void Game_room::explore(int session_id)
+{
+	auto ptr = std::dynamic_pointer_cast<Treasure_hunter>(player[session_id]);
+	if (ptr == nullptr)
+		return;
+	auto sc = ptr->explore(true);
+	push_state_code(session_id, sc);
+	if (sc == CODE::EXPLORE_RECEIVE)
+		explore_que.push(session_id);
+}
+
 void Game_room::bid(int session_id, int price)
 {
 	auto sc = player[session_id]->bid(auction_item, price);
@@ -411,7 +447,7 @@ void Game_room::bid(int session_id, int price)
 	}
 }
 
-Game_room::STAGE Game_room::get_current_stage()
+STAGE Game_room::get_current_stage()
 {
 	using namespace std::chrono;
 	auto s = get_duration();
@@ -423,7 +459,9 @@ Game_room::STAGE Game_room::get_current_stage()
 		return STAGE::DEPATURE1;
 	if (CONSTV::depature1 <= s && s < CONSTV::daytime)
 		return STAGE::DAYTIME;
-	return STAGE::NIGHT;
+	if (CONSTV::daytime <= s && s < CONSTV::night0)
+		return STAGE::NIGHT0;
+	return STAGE::NIGHT1;
 }
 
 void Game_room::switch_stage_calc()
@@ -454,11 +492,31 @@ void Game_room::switch_stage_calc()
 		}
 		while (!mine_que.empty())
 		{
-			auto& n = mine_que.front();
+			auto n = mine_que.front();
 			player[n]->mine();
 			mine_que.pop();
 		}
+		while (!explore_que.empty())
+		{
+			auto n = explore_que.front();
+			auto ptr = std::dynamic_pointer_cast<Treasure_hunter>(player[n]);
+			if (ptr == nullptr)
+			{
+				explore_que.pop();
+				continue;
+			}
+			auto sc = ptr->explore();
+			auto msg = std::make_shared<Proto_msg>(1, 59);
+			serialize_obj(msg->body, sc);
+			msg_que.emplace(n, msg);
+			if (sc == CODE::EXPLORE_SUCCESS);
+			{
+				treasure_vec.emplace_back(player[n]->get_location(), ptr->get_hint());
+			}
+			explore_que.pop();
+		}
 	}
+
 	while (!move_que.empty())
 	{
 		auto& [src, des] = move_que.front();
@@ -467,6 +525,7 @@ void Game_room::switch_stage_calc()
 		player[src]->move(des);
 		move_que.pop();
 	}
+
 	bool recalc = false;
 	if (stage == STAGE::DEPATURE0)
 	{
@@ -496,9 +555,12 @@ void Game_room::switch_stage_calc()
 	}
 	if (recalc)
 		switch_stage_calc();
-	broadcast_base_info();
-	stage = get_current_stage();
-	broadcast_switch_stage();
+	else
+	{
+		broadcast_base_info();
+		stage = get_current_stage();
+		broadcast_switch_stage();
+	}
 }
 
 void Game_room::next_day()

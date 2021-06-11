@@ -55,6 +55,7 @@ private:
 	void heal(std::shared_ptr<Proto_msg>msg);
 	void mine(std::shared_ptr<Proto_msg>msg);
 	void bid(std::shared_ptr<Proto_msg>msg);
+	void explore(std::shared_ptr<Proto_msg>msg);
 
 	void broadcast_room_info(int room_id);
 	void broadcast_event_in_room(int room_id, std::shared_ptr<Proto_msg>msg);

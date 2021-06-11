@@ -10,11 +10,11 @@ std::ostream& operator<<(std::ostream& os, const basic_game_info& info)
 
 	os << "当前时间:\t" << info.now_time - info.today_time << "\n";
 	os << "身份:\t" << character_name << "\n";
-	Otp_table table(5);
-	table.insert({ "生命", "地点", "弹药", "金币", "绷带" });
+	Otp_table table(6);
+	table.insert({ "生命", "地点", "弹药", "金币", "绷带" ,"线索" });
 
 	table.insert({ std::to_string(info.HP) ,std::to_string(info.location),
-		std::to_string(info.res.armo),std::to_string(info.res.coin) ,std::to_string(info.res.bandage) });
+		std::to_string(info.res.armo),std::to_string(info.res.coin) ,std::to_string(info.res.bandage),std::to_string(info.hint) });
 	os << table;
 	Otp_table other_info(4);
 	other_info.insert({ "id","昵称","地点","生命" });
@@ -60,11 +60,20 @@ void basic_game_info::next_stage()
 		}
 		else
 		{
-			stage = STAGE::NIGHT;
-			std::cout << "夜晚\n";
+			stage = STAGE::NIGHT0;
+			std::cout << "夜晚一阶段\n";
+			Otp_table table(2);
+			table.insert({ "地点","宝藏编号" });
+			for (const auto& p : treasure_vec)
+				table.insert({ std::to_string(p.first),std::to_string(p.second) });
+			std::cout << table;
 		}
 	}
-	else if (stage == STAGE::NIGHT)
+	else if (stage == STAGE::NIGHT0)
+	{
+		std::cout << "夜晚二阶段\n";
+	}
+	else if (stage == STAGE::NIGHT1)
 	{
 		day++;
 		stage = STAGE::READY;
@@ -73,7 +82,7 @@ void basic_game_info::next_stage()
 	std::cout << *this;
 }
 
-basic_game_info::STAGE basic_game_info::get_current_stage()const
+STAGE basic_game_info::get_current_stage()const
 {
 	using namespace CONSTV;
 	auto judge_stage = [&](const seconds& l, const seconds& r)
@@ -88,5 +97,7 @@ basic_game_info::STAGE basic_game_info::get_current_stage()const
 		return STAGE::DEPATURE1;
 	if (judge_stage(depature1, daytime))
 		return STAGE::DAYTIME;
-	return STAGE::NIGHT;
+	if (judge_stage(daytime, night0))
+		return STAGE::NIGHT0;
+	return STAGE::NIGHT1;
 }
