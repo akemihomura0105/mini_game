@@ -149,11 +149,7 @@ void System::run()
 	deserialize_obj(msg->body, session_id);
 	std::cout << "建立了会话：" << session_id << std::endl;
 	conn = std::make_shared<Tcp_connection>(io, sock, msg_que, session_id);
-	while (login())
-	{
-		//do something
-		login();
-	}
+	while (login());
 	std::cout << "login successfully" << std::endl;
 	hall_system_run();
 }
@@ -234,6 +230,16 @@ ASYNC_RET System::route()
 	case 60:
 	{
 		receive_treasure_info(msg);
+		break;
+	}
+	case 61:
+	{
+		game_finish(msg);
+		break;
+	}
+	case 62:
+	{
+		receive_ghost_sight(msg);
 		break;
 	}
 
@@ -368,7 +374,7 @@ void System::room_system_run()
 void System::sync_time(std::shared_ptr<Proto_msg>msg)
 {
 	deserialize_obj(msg->body, game_info->now_time);
-	std::cout << "当前时间：" << game_info->now_time << "\n";
+	//std::cout << "当前时间：" << game_info->now_time << "\n";
 }
 
 void System::game_system_run()
@@ -574,12 +580,22 @@ void System::receive_location_info(std::shared_ptr<Proto_msg>msg)
 {
 	std::vector<int>location_set;
 	deserialize_obj(msg->body, location_set);
+	for (auto& n : game_info->player)
+		n.location = -1;
 	for (int i = 1; i < location_set.size(); i++)
 	{
 		if (location_set[i] == game_info->game_id)
 			game_info->location = location_set[0];
 		game_info->player[location_set[i]].location = location_set[0];
 	}
+}
+
+void System::receive_ghost_sight(std::shared_ptr<Proto_msg> msg)
+{
+	std::vector<int>location_set;
+	deserialize_obj(msg->body, location_set);
+	for (int i = 0; i < game_info->player.size(); i++)
+		game_info->player[i].location = location_set[i];
 }
 
 void System::receive_res_info(std::shared_ptr<Proto_msg>msg)
@@ -594,18 +610,22 @@ void System::receive_treasure_result(std::shared_ptr<Proto_msg> msg)
 	if (sc == CODE::EXPLORE_SUCCESS)
 	{
 		std::cout << "成功获取线索\n";
-		game_info->hint++;
+		game_info->res.hint++;
 	}
 	else
-	{
 		std::cout << "未能获取线索\n";
-	}
 }
 
 void System::receive_treasure_info(std::shared_ptr<Proto_msg> msg)
 {
-	game_info->treasure_vec.clear();
-	deserialize_obj(msg->body, game_info->treasure_vec);
+	typedef std::pair<int, int>P;
+	std::vector<P>treasure_vec;
+	deserialize_obj(msg->body, treasure_vec);
+	Otp_table table(2);
+	table.insert({ "地点","宝藏编号" });
+	for (const auto& p : treasure_vec)
+		table.insert({ std::to_string(p.first),std::to_string(p.second) });
+	std::cout << table;
 }
 
 void System::receive_bid_info(std::shared_ptr<Proto_msg> msg)
@@ -623,14 +643,21 @@ void System::receive_bid_info(std::shared_ptr<Proto_msg> msg)
 
 void System::receive_buyer_info(std::shared_ptr<Proto_msg>msg)
 {
-	int game_id;
-	deserialize_obj(msg->body, game_id);
+	int game_id, price;
+	deserialize_obj(msg->body, game_id, price);
+	if (game_id == game_info->game_id)
+		game_info->res.coin -= price;
 	std::cout << game_info->player[game_id].name << " 购买了本件商品\n";
 }
 
 void System::receive_stage_change(std::shared_ptr<Proto_msg>msg)
 {
 	game_info->next_stage();
+}
+
+void System::game_finish(std::shared_ptr<Proto_msg> msg)
+{
+	std::cout << "游戏结束\n";
 }
 
 System::System(io_context& _io, ip::tcp::endpoint& _ep) :io(_io), ep(_ep)

@@ -10,10 +10,10 @@ void Auction_item::reset(int _item_id)
 	{
 	default:
 		break;
-	case 1:
+	case 0:
 		price = CONSTV::bidding_init_price;
 		break;
-	case 2:
+	case 1:
 		price = CONSTV::bidding_init_price;
 		break;
 	}

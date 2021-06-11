@@ -100,6 +100,7 @@ state_code Actionable_character::move(int target_location, bool try_flag)
 	return sc;
 }
 
+
 state_code Actionable_character::heal(Actionable_character& character, bool try_flag)
 {
 	state_code sc;

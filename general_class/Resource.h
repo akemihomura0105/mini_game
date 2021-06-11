@@ -12,10 +12,12 @@ struct Resource
 		ar& coin;
 		ar& armo;
 		ar& bandage;
+		ar& hint;
 	}
 	int coin = 0;
 	int armo = 0;
 	int bandage = 0;
+	int hint = 0;
 	Resource() {}
 	Resource(int _coin, int _armo, int _bandage) :coin(_coin), armo(_armo), bandage(_bandage) {}
 	Resource operator/(int k)const
@@ -24,6 +26,7 @@ struct Resource
 		res.coin = coin / k;
 		res.armo = armo / k;
 		res.bandage = bandage / k;
+		res.hint = hint / k;
 		return res;
 	}
 	Resource operator%(int k)const
@@ -32,6 +35,7 @@ struct Resource
 		res.coin = coin % k;
 		res.armo = armo % k;
 		res.bandage = bandage % k;
+		res.hint = hint % k;
 		return res;
 	}
 	Resource& operator+=(Resource res)
@@ -39,6 +43,7 @@ struct Resource
 		coin += res.coin;
 		armo += res.armo;
 		bandage += res.bandage;
+		hint += res.hint;
 		return *this;
 	}
 	std::vector<Resource> divide(int k)
@@ -54,5 +59,6 @@ struct Resource
 		coin = 0;
 		armo = 0;
 		bandage = 0;
+		hint = 0;
 	}
 };

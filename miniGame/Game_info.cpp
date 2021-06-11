@@ -13,13 +13,16 @@ std::ostream& operator<<(std::ostream& os, const basic_game_info& info)
 	Otp_table table(6);
 	table.insert({ "生命", "地点", "弹药", "金币", "绷带" ,"线索" });
 
-	table.insert({ std::to_string(info.HP) ,std::to_string(info.location),
-		std::to_string(info.res.armo),std::to_string(info.res.coin) ,std::to_string(info.res.bandage),std::to_string(info.hint) });
+	table.insert({ (info.HP <= 0 ? "死亡" : std::to_string(info.HP)) ,
+		std::to_string(info.location),
+		std::to_string(info.res.armo),std::to_string(info.res.coin) ,std::to_string(info.res.bandage),std::to_string(info.res.hint) });
 	os << table;
 	Otp_table other_info(4);
 	other_info.insert({ "id","昵称","地点","生命" });
 	for (int i = 0; i < info.player.size(); i++)
-		other_info.insert({ std::to_string(i),info.player[i].name,std::to_string(info.player[i].location),std::to_string(info.player[i].HP) });
+		other_info.insert({ std::to_string(i),info.player[i].name,
+			(info.player[i].location == -1 ? "未知" : std::to_string(info.player[i].location)),
+			std::to_string(info.player[i].HP) });
 	os << other_info;
 	return os;
 }
@@ -53,7 +56,7 @@ void basic_game_info::next_stage()
 	}
 	else if (stage == STAGE::DAYTIME)
 	{
-		if (++turn < CONSTV::day_turn)
+		if (turn++ < CONSTV::day_turn)
 		{
 			action_point = true;
 			std::cout << "白天, 回合: " << turn << "\n";
@@ -62,11 +65,6 @@ void basic_game_info::next_stage()
 		{
 			stage = STAGE::NIGHT0;
 			std::cout << "夜晚一阶段\n";
-			Otp_table table(2);
-			table.insert({ "地点","宝藏编号" });
-			for (const auto& p : treasure_vec)
-				table.insert({ std::to_string(p.first),std::to_string(p.second) });
-			std::cout << table;
 		}
 	}
 	else if (stage == STAGE::NIGHT0)
@@ -80,6 +78,7 @@ void basic_game_info::next_stage()
 		std::cout << "准备阶段, 第" << day + 1 << "天\n";
 	}
 	std::cout << *this;
+	std::cout << "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n";
 }
 
 STAGE basic_game_info::get_current_stage()const

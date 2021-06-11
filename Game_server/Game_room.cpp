@@ -158,7 +158,13 @@ void Game_room::depature_stage0(bool exec)
 	}
 	if (get_current_stage() == STAGE::DEPATURE1)
 	{
-		switch_stage_calc();
+		for (auto& n : location[0])
+		{
+			std::uniform_int_distribution<int> dist(1, location.size() - 1);
+			if (std::dynamic_pointer_cast<Treasure_hunter>(n) != nullptr)
+				change_location(n->get_session_id(), dist(mt));
+		}
+		switch_stage_calc(false);
 		io->post(bind(&Game_room::depature_stage1, shared_from_this(), true));
 	}
 	else
@@ -173,7 +179,19 @@ void Game_room::depature_stage1(bool exec)
 	}
 	if (get_current_stage() == STAGE::DAYTIME)
 	{
+		for (auto& n : location[0])
+		{
+			std::uniform_int_distribution<int>dist(1, location.size() - 1);
+			if (std::dynamic_pointer_cast<Evil_spirit>(n) != nullptr)
+			{
+				int dist_location = dist(mt);
+				assert(dist_location != 0);
+				change_location(n->get_session_id(), dist_location);
+			}
+		}
 		switch_stage_calc();
+		for (auto& p : player)
+			p.second->next_turn();
 		io->post(bind(&Game_room::daytime_stage, shared_from_this(), true));
 	}
 	else
@@ -191,12 +209,15 @@ void Game_room::daytime_stage(bool exec)
 	{
 		last_turn_time = dura;
 		switch_stage_calc();
+		for (auto& p : player)
+			p.second->next_turn();
 	}
 	if (get_current_stage() == STAGE::NIGHT0)
 	{
-		last_bid_time = get_duration();
-		auction_item.reset(1);
-		broadcast_auction_item();
+		for (const auto& n : player)
+		{
+			n.second->move_force(0);
+		}
 		io->post(bind(&Game_room::night_stage0, shared_from_this(), true));
 	}
 	else
@@ -209,11 +230,23 @@ void Game_room::night_stage0(bool exec)
 	{
 		std::cerr << "enter the night stage0\n";
 		broadcast_treasure_info();
+		for (const auto& n : player)
+		{
+			if (n.second->get_res().hint == CONSTV::HINT_GOAL)
+			{
+				stage = STAGE::END;
+				io->post(bind(&Game_room::settlement_stage, shared_from_this()));
+				return;
+			}
+		}
 		treasure_vec.clear();
-		switch_stage_calc();
 	}
 	if (get_current_stage() == STAGE::NIGHT1)
+	{
+		auction_item.reset(0);
+		switch_stage_calc();
 		io->post(bind(&Game_room::night_stage1, shared_from_this(), 0, true));
+	}
 	else
 		io->post(bind(&Game_room::night_stage0, shared_from_this(), false));
 }
@@ -223,23 +256,27 @@ void Game_room::night_stage1(int bid_stage, bool exec)
 	if (bid_stage > CONSTV::auction_item_num)
 		return;
 	auto dura = get_duration();
-	if (dura - last_bid_time > CONSTV::bidding_time)
+	if (exec)
 	{
-		std::cerr << bid_stage << "----------------------------\n";
+		last_bid_time = dura;
+		auction_item.reset(auction_item.item_id);
+		if (bid_stage == CONSTV::armo_item_stage)
+			auction_item.reset(1);
+		broadcast_auction_item();
+	}
+	if (dura - last_bid_time >= CONSTV::bidding_time)
+	{
 		last_bid_time = dura;
 		if (auction_item.bidder != -1)
 		{
-			broadcast_buyer(auction_item.bidder);
+			broadcast_buyer(auction_item.bidder, auction_item.price);
 			if (bid_stage < CONSTV::armo_item_stage)
 				order_player[auction_item.bidder]->add_armo();
 			if (CONSTV::armo_item_stage <= bid_stage && bid_stage < CONSTV::bandage_item_stage)
 				order_player[auction_item.bidder]->add_bandage();
 			broadcast_res(order_player[auction_item.bidder]->get_session_id());
 		}
-		auction_item.reset(auction_item.item_id);
-		if (bid_stage == CONSTV::armo_item_stage)
-			auction_item.reset(2);
-		if (bid_stage == CONSTV::bandage_item_stage)
+		if (bid_stage + 1 == CONSTV::bandage_item_stage)
 		{
 			next_day();
 			switch_stage_calc();
@@ -252,8 +289,28 @@ void Game_room::night_stage1(int bid_stage, bool exec)
 		io->post(bind(&Game_room::night_stage1, shared_from_this(), bid_stage, false));
 }
 
+void Game_room::settlement_stage()
+{
+	int state = 0;
+	for (const auto& n : player)
+	{
+		if (n.second->get_res().hint == CONSTV::HINT_GOAL)
+		{
+			if (std::dynamic_pointer_cast<Treasure_hunter>(n.second) != nullptr)
+				state ^= 1;
+			if (std::dynamic_pointer_cast<Evil_spirit>(n.second) != nullptr)
+				state ^= 2;
+		}
+	}
+	auto msg = std::make_shared<Proto_msg>(1, 61);
+	for (const auto& n : player)
+		msg_que.emplace(n.first, msg);
+}
+
 void Game_room::broadcast_time()
 {
+	if (stage == STAGE::END)
+		return;
 	//static int cnt = 0;
 	using namespace std::chrono;
 	auto msg = std::make_shared<Proto_msg>(1, 49);
@@ -298,18 +355,27 @@ void Game_room::broadcast_location(int _location)
 	serialize_obj(msg->body, location_set);
 	for (const auto& n : location[_location])
 	{
+		if (std::dynamic_pointer_cast<const Evil_spirit>(n) != nullptr)
+			continue;
 		int session_id = n->get_session_id();
 		msg_que.emplace(session_id, msg);
 	}
+	broadcast_ghost_sight();
 }
 
-void Game_room::ghost_sight()
+void Game_room::broadcast_ghost_sight()
 {
-	typedef std::pair<int, int>pos;
-	std::vector<pos>location_set;
+	std::vector<int>location_set(player.size());
 	for (int i = 0; i < location.size(); i++)
 		for (const auto& n : location[i])
-			location_set.emplace_back(n->get_game_id(), i);
+			location_set[n->get_game_id()] = i;
+	auto msg = std::make_shared<Proto_msg>(1, 62);
+	serialize_obj(msg->body, location_set);
+	for (const auto& n : player)
+		if (std::dynamic_pointer_cast<const Evil_spirit>(n.second) != nullptr)
+		{
+			msg_que.emplace(n.first, msg);
+		}
 }
 
 void Game_room::broadcast_hp(int _location)
@@ -359,10 +425,10 @@ void Game_room::broadcast_auction_item()
 		msg_que.emplace(n.first, msg);
 }
 
-void Game_room::broadcast_buyer(int buyer)
+void Game_room::broadcast_buyer(int buyer, int price)
 {
 	auto msg = std::make_shared<Proto_msg>(1, 57);
-	serialize_obj(msg->body, buyer);
+	serialize_obj(msg->body, buyer, price);
 	for (const auto& n : player)
 		msg_que.emplace(n.first, msg);
 }
@@ -464,7 +530,7 @@ STAGE Game_room::get_current_stage()
 	return STAGE::NIGHT1;
 }
 
-void Game_room::switch_stage_calc()
+void Game_room::switch_stage_calc(bool is_broadcast_location)
 {
 	if (stage == STAGE::DAYTIME)
 	{
@@ -525,42 +591,10 @@ void Game_room::switch_stage_calc()
 		player[src]->move(des);
 		move_que.pop();
 	}
-
-	bool recalc = false;
-	if (stage == STAGE::DEPATURE0)
-	{
-		for (auto& n : location[0])
-		{
-			std::uniform_int_distribution<int> dist(1, location.size() - 1);
-			if (std::dynamic_pointer_cast<Treasure_hunter>(n) != nullptr)
-			{
-				change_location(n->get_session_id(), dist(mt));
-				recalc = true;
-			}
-		}
-	}
-	if (stage == STAGE::DEPATURE1)
-	{
-		for (auto& n : location[0])
-		{
-			std::uniform_int_distribution<int>dist(1, location.size() - 1);
-			if (std::dynamic_pointer_cast<Evil_spirit>(n) != nullptr)
-			{
-				change_location(n->get_session_id(), dist(mt));
-				recalc = true;
-			}
-		}
-		for (auto& p : player)
-			p.second->next_turn();
-	}
-	if (recalc)
-		switch_stage_calc();
-	else
-	{
+	if (is_broadcast_location)
 		broadcast_base_info();
-		stage = get_current_stage();
-		broadcast_switch_stage();
-	}
+	stage = get_current_stage();
+	broadcast_switch_stage();
 }
 
 void Game_room::next_day()

@@ -148,21 +148,22 @@ private:
 	void daytime_stage(bool exec);
 	void night_stage0(bool exec);
 	void night_stage1(int bid_stage, bool exec);
+	void settlement_stage();
 	std::vector<int>get_session_set(int location);
 	void broadcast_time();
 	void broadcast_switch_stage();
 	void broadcast_game_info();
 	void broadcast_location(int location);
-	void ghost_sight();
+	void broadcast_ghost_sight();
 	void broadcast_hp(int location);
 	void broadcast_res(int session_id = -1);
 	void broadcast_treasure_info();
 	void broadcast_auction_item();
-	void broadcast_buyer(int buyer);
+	void broadcast_buyer(int buyer, int price);
 	void broadcast_base_info();
 
 	void push_state_code(int session_id, const state_code& sc);
 
-	void switch_stage_calc();
+	void switch_stage_calc(bool is_broadcast_location = true);
 	void next_day();
 };

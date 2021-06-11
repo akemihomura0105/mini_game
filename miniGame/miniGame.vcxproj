@@ -156,7 +156,6 @@
     <ClCompile Include="..\general_class\state_code.cpp" />
     <ClCompile Include="..\general_class\Tcp_connection.cpp" />
     <ClCompile Include="..\general_class\User_info.cpp" />
-    <ClCompile Include="Character.cpp" />
     <ClCompile Include="Game_info.cpp" />
     <ClCompile Include="miniGame.cpp" />
     <ClCompile Include="Otp_table.cpp" />
@@ -170,7 +169,6 @@
     <ClInclude Include="..\general_class\state_code.h" />
     <ClInclude Include="..\general_class\Tcp_connection.h" />
     <ClInclude Include="..\general_class\User_info.h" />
-    <ClInclude Include="Character.h" />
     <ClInclude Include="Game_info.h" />
     <ClInclude Include="Otp_table.h" />
     <ClInclude Include="System.h" />

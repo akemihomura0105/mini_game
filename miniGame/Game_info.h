@@ -24,7 +24,6 @@ struct basic_game_info
 	int action_point;
 	int location = 0;
 	int game_id = -1;
-	int hint = 0;
 
 	typedef std::pair<int, int>treasure_P;
 	std::vector<treasure_P>treasure_vec;

@@ -1,5 +1,6 @@
 #pragma once
 #pragma once
+#pragma once
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
 #include <boost/serialization/serialization.hpp>
@@ -81,6 +82,7 @@ private:
 	void bid(int price);
 	void receive_state_code_result(std::shared_ptr<Proto_msg>msg);
 	void receive_location_info(std::shared_ptr<Proto_msg>msg);
+	void receive_ghost_sight(std::shared_ptr<Proto_msg>msg);
 	void receive_hp_info(std::shared_ptr<Proto_msg>msg);
 	void receive_res_info(std::shared_ptr<Proto_msg>msg);
 	void receive_treasure_result(std::shared_ptr<Proto_msg>msg);
@@ -88,5 +90,6 @@ private:
 	void receive_bid_info(std::shared_ptr<Proto_msg>msg);
 	void receive_buyer_info(std::shared_ptr<Proto_msg>msg);
 	void receive_stage_change(std::shared_ptr<Proto_msg>msg);
+	void game_finish(std::shared_ptr<Proto_msg>msg);
 	void next_day();
 };

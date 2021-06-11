@@ -18,9 +18,6 @@
     <ClCompile Include="miniGame.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="Character.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="System.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -50,9 +47,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Character.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="System.h">
       <Filter>头文件</Filter>
     </ClInclude>

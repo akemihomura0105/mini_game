@@ -16,6 +16,7 @@ public:
 	virtual state_code attack(Actionable_character& character, bool try_flag = false);
 	state_code treasure_hunt(bool try_flag = false);
 	state_code move(int target_location, bool try_flag = false);
+
 	virtual state_code heal(Actionable_character& character, bool try_flag = false);
 	//state_code try_buy();
 	virtual void next_turn();

@@ -17,19 +17,23 @@ public:
 	int get_armo()const;
 	int get_bandage()const;
 	int get_location()const;
+	int get_hint()const;
 	const Resource& get_res()const;
 	void set_res(Resource& res);
 	void clear_res();
 	bool isalive()const;
 	bool has_action_point()const;
 	void set_character_id(int n);
+	void set_action_flag(bool flag);
 	void get_damage(int n);
 	void add_armo(int n = 1);
 	void add_bandage(int n = 1);
+	void add_hint(int n = 1);
 	state_code action_check();
 	virtual state_code attack(Actionable_character& character, bool try_flag = false);
 	state_code treasure_hunt(bool try_flag = false);
 	state_code move(int target_location, bool try_flag = false);
+	void move_force(int target_location);
 	virtual state_code heal(Actionable_character& character, bool try_flag = false);
 	state_code mine(bool try_flag = false);
 	state_code bid(Auction_item& item, int price);
@@ -53,9 +57,7 @@ private:
 class Treasure_hunter :public Actionable_character
 {
 private:
-	int hint;
 public:
-	int get_hint()const;
 	state_code explore(bool try_flag = false);
 	Treasure_hunter(int game_id, int session_id);
 };
@@ -67,8 +69,6 @@ public:
 	void next_turn();
 	Evil_spirit(int room_id, int session_id);
 private:
-	static constexpr int MAX_charge_num = 2;
-	static constexpr int COOLDOWN_TIME = 3;
 	int skill_charge_num;
 	int cooldown_cnt;
 };

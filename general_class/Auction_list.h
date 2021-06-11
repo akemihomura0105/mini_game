@@ -14,7 +14,7 @@ struct Auction_item
 		ar& bidder;
 	}
 	const static std::array<std::string, 2>item_name;
-	int item_id;
+	int item_id = 0;
 	//item_id
 	// 	   0: bandage
 	// 	   1: armo

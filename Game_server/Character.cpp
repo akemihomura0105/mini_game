@@ -35,6 +35,11 @@ int Actionable_character::get_location()const
 	return location;
 }
 
+int Actionable_character::get_hint() const
+{
+	return res.hint;
+}
+
 const Resource& Actionable_character::get_res()const
 {
 	return res;
@@ -65,6 +70,11 @@ void Actionable_character::set_character_id(int n)
 	character_id = n;
 }
 
+void Actionable_character::set_action_flag(bool flag)
+{
+	action_flag = flag;
+}
+
 void Actionable_character::get_damage(int n)
 {
 	HP -= n;
@@ -78,6 +88,11 @@ void Actionable_character::add_armo(int n)
 void Actionable_character::add_bandage(int n)
 {
 	res.bandage += n;
+}
+
+void Actionable_character::add_hint(int n)
+{
+	res.hint++;
 }
 
 state_code Actionable_character::action_check()
@@ -147,6 +162,11 @@ state_code Actionable_character::move(int target_location, bool try_flag)
 		action_flag = false;
 	}
 	return sc;
+}
+
+void Actionable_character::move_force(int target_location)
+{
+	location = target_location;
 }
 
 state_code Actionable_character::heal(Actionable_character& character, bool try_flag)
@@ -228,19 +248,28 @@ Actionable_character::Actionable_character(int _game_id, int _session_id, int _H
 state_code Evil_spirit::attack(Actionable_character& character, bool try_flag)
 {
 	state_code sc;
-	if (!skill_charge_num)
+	sc = action_check();
+	if (sc != CODE::NONE)
+		return sc;
+	if (get_res().armo == 0 && skill_charge_num == 0)
 	{
-		sc.set(CODE::SKILL_STILL_IN_COOLDOWN);
+		sc.set(CODE::NO_ARMO);
 		return sc;
 	}
+	if (!character.isalive())
+	{
+		sc.set(CODE::OBJECT_HAS_DEAD);
+		return sc;
+	}
+	sc.set(CODE::ATTACK_SUCCESS);
 	if (!try_flag)
 	{
-		skill_charge_num--;
-		int now_armo = get_res().armo;
-		add_armo();
-		auto sc = Actionable_character::attack(character, try_flag);
-		if (sc != CODE::ATTACK_SUCCESS)
+		set_action_flag(false);
+		if (skill_charge_num > 0)
+			skill_charge_num--;
+		else
 			add_armo(-1);
+		character.get_damage(1);
 	}
 	return sc;
 }
@@ -248,18 +277,13 @@ state_code Evil_spirit::attack(Actionable_character& character, bool try_flag)
 void Evil_spirit::next_turn()
 {
 	Actionable_character::next_turn();
-	if (skill_charge_num == MAX_charge_num)
+	if (skill_charge_num == CONSTV::ES_MAX_charge_num)
 		return;
 	if (--cooldown_cnt == 0)
 	{
 		skill_charge_num++;
-		cooldown_cnt = COOLDOWN_TIME;
+		cooldown_cnt = CONSTV::ES_MAX_charge_num;
 	}
-}
-
-int Treasure_hunter::get_hint() const
-{
-	return hint;
 }
 
 state_code Treasure_hunter::explore(bool try_flag)
@@ -276,12 +300,10 @@ state_code Treasure_hunter::explore(bool try_flag)
 		if (dist(mt) < CONSTV::explore_probability)
 		{
 			sc.set(CODE::EXPLORE_SUCCESS);
-			hint++;
+			add_hint();
 		}
 		else
-		{
 			sc.set(CODE::EXPLORE_FAILED);
-		}
 	}
 	return sc;
 }
@@ -298,5 +320,8 @@ Evil_spirit::Evil_spirit(int game_id, int session_id) : Actionable_character(
 	game_id, session_id, CONSTV::initial_HP,
 	Resource(CONSTV::ES_initial_coin, CONSTV::ES_initial_armo, CONSTV::ES_initial_bandage))
 {
+	skill_charge_num = CONSTV::ES_initial_skill_charge;
+	cooldown_cnt = CONSTV::ES_skill_cooldown_time;
 	set_character_id(2);
+
 }
