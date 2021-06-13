@@ -100,7 +100,7 @@ void Actionable_character::add_coin(int n)
 	res.coin += n;
 }
 
-state_code Actionable_character::action_check()
+state_code Actionable_character::action_check()const
 {
 	state_code sc;
 	if (!action_flag)
@@ -112,8 +112,7 @@ state_code Actionable_character::action_check()
 
 state_code Actionable_character::attack(Actionable_character& character, bool try_flag)
 {
-	state_code sc;
-	sc = action_check();
+	state_code sc = pre_attack_judge(character);
 	if (sc != CODE::NONE)
 		return sc;
 	if (res.armo == 0)
@@ -121,11 +120,7 @@ state_code Actionable_character::attack(Actionable_character& character, bool tr
 		sc.set(CODE::NO_ARMO);
 		return sc;
 	}
-	if (!character.isalive())
-	{
-		sc.set(CODE::OBJECT_HAS_DEAD);
-		return sc;
-	}
+
 	sc.set(CODE::ATTACK_SUCCESS);
 	if (!try_flag)
 	{
@@ -186,14 +181,19 @@ state_code Actionable_character::heal(Actionable_character& character, bool try_
 		sc.set(CODE::NO_BANDAGE);
 		return sc;
 	}
-	if (character.HP == CONSTV::MAX_HP)
-	{
-		sc.set(CODE::OBJECT_HAS_FULL_HP);
-		return sc;
-	}
 	if (!character.isalive())
 	{
 		sc.set(CODE::OBJECT_HAS_DEAD);
+		return sc;
+	}
+	if (get_location() != character.get_location())
+	{
+		sc.set(CODE::DIFFERENT_PLACE);
+		return sc;
+	}
+	if (character.HP == CONSTV::MAX_HP)
+	{
+		sc.set(CODE::OBJECT_HAS_FULL_HP);
 		return sc;
 	}
 	sc.set(HEAL_SUCCESS);
@@ -213,7 +213,10 @@ state_code Actionable_character::mine(bool try_flag)
 		return sc;
 	sc.set(CODE::MINE_SUCCESS);
 	if (!try_flag)
+	{
 		res.coin += 3;
+		action_flag = false;
+	}
 	return sc;
 }
 
@@ -251,20 +254,33 @@ Actionable_character::Actionable_character(int _game_id, int _session_id, int _H
 {
 }
 
-state_code Evil_spirit::attack(Actionable_character& character, bool try_flag)
+state_code Actionable_character::pre_attack_judge(const Actionable_character& character) const
 {
 	state_code sc;
 	sc = action_check();
 	if (sc != CODE::NONE)
 		return sc;
-	if (get_res().armo == 0 && skill_charge_num == 0)
-	{
-		sc.set(CODE::NO_ARMO);
-		return sc;
-	}
 	if (!character.isalive())
 	{
 		sc.set(CODE::OBJECT_HAS_DEAD);
+		return sc;
+	}
+	if (get_location() != character.get_location())
+	{
+		sc.set(CODE::DIFFERENT_PLACE);
+		return sc;
+	}
+	return sc;
+}
+
+state_code Evil_spirit::attack(Actionable_character& character, bool try_flag)
+{
+	state_code sc = pre_attack_judge(character);
+	if (sc != CODE::NONE)
+		return sc;
+	if (get_res().armo == 0 && skill_charge_num == 0)
+	{
+		sc.set(CODE::NO_ARMO);
 		return sc;
 	}
 	sc.set(CODE::ATTACK_SUCCESS);
@@ -310,6 +326,7 @@ state_code Treasure_hunter::explore(bool try_flag)
 		}
 		else
 			sc.set(CODE::EXPLORE_FAILED);
+		set_action_flag(false);
 	}
 	return sc;
 }

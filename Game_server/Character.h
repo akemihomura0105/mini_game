@@ -30,7 +30,7 @@ public:
 	void add_bandage(int n = 1);
 	void add_hint(int n = 1);
 	void add_coin(int n = 1);
-	state_code action_check();
+	state_code action_check()const;
 	virtual state_code attack(Actionable_character& character, bool try_flag = false);
 	state_code treasure_hunt(bool try_flag = false);
 	state_code move(int target_location, bool try_flag = false);
@@ -45,6 +45,8 @@ public:
 	bool operator==(const Actionable_character& character)const;
 	Actionable_character(int game_id, int session_id,
 		int HP, Resource&& res);
+protected:
+	state_code pre_attack_judge(const Actionable_character& character)const;
 private:
 	int character_id;
 	int game_id;

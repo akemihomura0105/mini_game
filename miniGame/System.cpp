@@ -323,10 +323,20 @@ ASYNC_RET System::message_route()
 		{
 			mine();
 		}
-		if (input.size() >= 3 && input.size() <= 10 && input.substr(0, 3) == "bid")
+
+		if (input.size() >= 1 && input.size() <= 7 && input[0] == 'b')
 		{
-			auto num_str = input.substr(3, input.size() - 3);
-			int val = std::stoi(num_str.data());
+			for (int i = 1; i < input.size(); i++)
+			{
+				if (!isdigit(input[i]) && input[i] != ' ')
+				{
+					io.post(bind(&System::message_route, shared_from_this()));
+					return;
+				}
+			}
+			int val = 0;
+			for (int i = 1; i < input.size(); i++)
+				val = val + input[i] - '0';
 			bid(val);
 		}
 		if (input.size() == 3 && input.substr(0, 3) == "exp")
@@ -382,7 +392,6 @@ void System::room_system_run()
 void System::sync_time(std::shared_ptr<Proto_msg>msg)
 {
 	deserialize_obj(msg->body, game_info->now_time);
-	//std::cout << "当前时间：" << game_info->now_time << "\n";
 }
 
 void System::game_system_run()
@@ -429,6 +438,7 @@ void System::start_game()
 
 void System::create_game_info(std::shared_ptr<Proto_msg>msg)
 {
+	game_system_run();
 	int character_id, hp;
 	Resource res;
 	deserialize_obj(msg->body, character_id, hp, res);
@@ -572,6 +582,7 @@ void System::receive_state_code_result(std::shared_ptr<Proto_msg> msg)
 
 void System::receive_hp_info(std::shared_ptr<Proto_msg> msg)
 {
+	std::cout << msg->body << "\n";
 	typedef std::pair<int, int>life_info;
 	std::vector<life_info>hp_set;
 	deserialize_obj(msg->body, hp_set);
@@ -585,6 +596,7 @@ void System::receive_hp_info(std::shared_ptr<Proto_msg> msg)
 
 void System::receive_location_info(std::shared_ptr<Proto_msg>msg)
 {
+	std::cout << "call receive_location_info\n";
 	std::vector<int>location_set;
 	deserialize_obj(msg->body, location_set);
 	for (auto& n : game_info->player)
@@ -602,7 +614,11 @@ void System::receive_ghost_sight(std::shared_ptr<Proto_msg> msg)
 	std::vector<int>location_set;
 	deserialize_obj(msg->body, location_set);
 	for (int i = 0; i < game_info->player.size(); i++)
+	{
+		if (i == game_info->game_id)
+			game_info->location = location_set[i];
 		game_info->player[i].location = location_set[i];
+	}
 }
 
 void System::receive_res_info(std::shared_ptr<Proto_msg>msg)
@@ -653,11 +669,12 @@ void System::receive_buyer_info(std::shared_ptr<Proto_msg>msg)
 	int game_id, price;
 	deserialize_obj(msg->body, game_id, price);
 	std::cout << game_info->player[game_id].name << "，以 " << price << " 的价格购买了本件商品\n";
-	std::cout << "*********************************************************************************";
+	std::cout << "*********************************************************************************\n";
 }
 
 void System::receive_stage_change(std::shared_ptr<Proto_msg>msg)
 {
+	std::cout << "receive stage change\n";
 	game_info->next_stage();
 }
 

@@ -76,9 +76,7 @@ void basic_game_info::next_stage()
 	}
 	else if (stage == STAGE::DAYTIME)
 	{
-
-
-		if (turn++ < CONSTV::day_turn)
+		if (++turn < CONSTV::day_turn)
 		{
 			if (character_id == 1)
 			{

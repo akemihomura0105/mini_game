@@ -36,9 +36,6 @@
     <ClCompile Include="..\general_class\Tcp_connection.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="Character.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="Character_factory.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -56,6 +53,9 @@
     </ClCompile>
     <ClCompile Include="..\general_class\Auction_list.cpp">
       <Filter>general.cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="Character.cpp">
+      <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
