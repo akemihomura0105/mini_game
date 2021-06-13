@@ -29,6 +29,7 @@ public:
 	void add_armo(int n = 1);
 	void add_bandage(int n = 1);
 	void add_hint(int n = 1);
+	void add_coin(int n = 1);
 	state_code action_check();
 	virtual state_code attack(Actionable_character& character, bool try_flag = false);
 	state_code treasure_hunt(bool try_flag = false);

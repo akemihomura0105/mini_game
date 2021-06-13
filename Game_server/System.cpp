@@ -50,7 +50,7 @@ void System::accept_handler(std::shared_ptr<ip::tcp::socket>sock, const boost::s
 			session[*session_id] = conn;
 
 		io.post(bind(&Tcp_connection::run, conn));
-		auto msg = std::make_shared<Proto_msg>(1, 1);
+		auto msg = std::make_shared<Proto_msg>(1, 0);
 		serialize_obj(msg->body, int(*session_id));
 		conn->push_event(msg);
 	}
@@ -102,7 +102,6 @@ void System::show_room(std::shared_ptr<Proto_msg> msg)
 	serialize_obj(res_msg->body, state_code(), room_vec);
 	std::cerr << res_msg->body << std::endl;
 	session[session_id]->push_event(res_msg);
-	return void();
 }
 
 void System::create_room(std::shared_ptr<Proto_msg> msg)
@@ -119,7 +118,7 @@ void System::create_room(std::shared_ptr<Proto_msg> msg)
 	room[room_id] = game_room;
 
 	room[room_id]->add_user(session_id, session_to_user[session_id]);
-	serialize_obj(res_msg->body, room_id);
+	serialize_obj(res_msg->body, game_room->get_Room_property());
 	session[session_id]->push_event(res_msg);
 	broadcast_room_info(room_id);
 }
@@ -135,8 +134,8 @@ void System::join_room(std::shared_ptr<Proto_msg> msg)
 		sc.set(CODE::ROOM_NOT_EXIST);
 	else
 		if (room[room_id]->add_user(session_id, session_to_user[session_id]) == 1)
-			sc.set(CODE::ROOM_FULL);
-	serialize_obj(res_msg->body, sc);
+			sc.set(CODE::ROOM_FULL)
+	serialize_obj(res_msg->body, sc, room_id);
 	session[session_id]->push_event(res_msg);
 	if (sc == CODE::NONE)
 		broadcast_room_info(room_id);
@@ -163,10 +162,6 @@ void System::exit_room(std::shared_ptr<Proto_msg> msg)
 	int room_id;
 	deserialize_obj(msg->body, session_id, room_id);
 	exit_room(session_id, room_id);
-	auto res_msg = std::make_shared<Proto_msg>(1, 4);
-	serialize_obj(res_msg->body, state_code());
-	session[session_id]->push_event(res_msg);
-	broadcast_room_info(room_id);
 }
 
 void System::set_ready(std::shared_ptr<Proto_msg> msg)

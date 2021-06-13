@@ -25,7 +25,6 @@ int Game_room::add_user(int session_id, std::shared_ptr <User> _user)
 // return 0: delete normally
 // return 1: users not found;
 // return 2: empty room, should be deleted by system.
-
 int Game_room::remove_user(int session_id, std::shared_ptr<User> _user)
 {
 	auto ite = std::find(users.begin(), users.end(), session_id);
@@ -108,6 +107,9 @@ void Game_room::load_player()
 		vec = { 1,2 };
 		location.resize(3);
 		break;
+	case 3:
+		vec = { 1,1,2 };
+		location.resize(3);
 	case 4:
 		vec = { 1,1,1,2 };
 		location.resize(3);
@@ -158,13 +160,7 @@ void Game_room::depature_stage0(bool exec)
 	}
 	if (get_current_stage() == STAGE::DEPATURE1)
 	{
-		for (auto& n : location[0])
-		{
-			std::uniform_int_distribution<int> dist(1, location.size() - 1);
-			if (std::dynamic_pointer_cast<Treasure_hunter>(n) != nullptr)
-				change_location(n->get_session_id(), dist(mt));
-		}
-		switch_stage_calc(false);
+		switch_stage_calc();
 		io->post(bind(&Game_room::depature_stage1, shared_from_this(), true));
 	}
 	else
@@ -179,16 +175,6 @@ void Game_room::depature_stage1(bool exec)
 	}
 	if (get_current_stage() == STAGE::DAYTIME)
 	{
-		for (auto& n : location[0])
-		{
-			std::uniform_int_distribution<int>dist(1, location.size() - 1);
-			if (std::dynamic_pointer_cast<Evil_spirit>(n) != nullptr)
-			{
-				int dist_location = dist(mt);
-				assert(dist_location != 0);
-				change_location(n->get_session_id(), dist_location);
-			}
-		}
 		switch_stage_calc();
 		for (auto& p : player)
 			p.second->next_turn();
@@ -269,6 +255,7 @@ void Game_room::night_stage1(int bid_stage, bool exec)
 		last_bid_time = dura;
 		if (auction_item.bidder != -1)
 		{
+			order_player[auction_item.bidder]->add_coin(-auction_item.price);
 			broadcast_buyer(auction_item.bidder, auction_item.price);
 			if (bid_stage < CONSTV::armo_item_stage)
 				order_player[auction_item.bidder]->add_armo();
@@ -340,7 +327,6 @@ void Game_room::broadcast_game_info()
 		auto msg = std::make_shared<Proto_msg>(1, 51);
 		serialize_obj(msg->body, p.second->get_character_id(), p.second->get_hp(), p.second->get_res());
 		std::cerr << p.first << "-----" << msg->body << "-----" << p.second->get_character_id() << std::endl;
-		msg_que.push(std::make_pair(p.first, msg));
 		msg_que.emplace(p.first, msg);
 	}
 }
@@ -469,6 +455,8 @@ void Game_room::attack(int src, int des)
 {
 	if (stage != STAGE::DAYTIME)
 		return;
+	if (src >= player.size() || des >= player.size())
+		return;
 	auto sc = player[src]->attack(*player[des], true);
 	push_state_code(src, sc);
 	if (sc == CODE::ATTACK_SUCCESS)
@@ -477,6 +465,8 @@ void Game_room::attack(int src, int des)
 
 void Game_room::heal(int src, int des)
 {
+	if (src >= player.size() || des >= player.size())
+		return;
 	auto sc = player[src]->heal(*player[des], true);
 	push_state_code(src, sc);
 	if (sc == CODE::HEAL_SUCCESS)
@@ -485,6 +475,8 @@ void Game_room::heal(int src, int des)
 
 void Game_room::mine(int session_id)
 {
+	if (session_id >= player.size())
+		return;
 	auto sc = player[session_id]->mine(true);
 	push_state_code(session_id, sc);
 	if (sc == CODE::MINE_SUCCESS)
@@ -493,6 +485,8 @@ void Game_room::mine(int session_id)
 
 void Game_room::explore(int session_id)
 {
+	if (session_id >= player.size())
+		return;
 	auto ptr = std::dynamic_pointer_cast<Treasure_hunter>(player[session_id]);
 	if (ptr == nullptr)
 		return;
@@ -504,6 +498,9 @@ void Game_room::explore(int session_id)
 
 void Game_room::bid(int session_id, int price)
 {
+	if (session_id >= player.size() ||
+		price > CONSTV::MAX_BID_PRICE)
+		return;
 	auto sc = player[session_id]->bid(auction_item, price);
 	push_state_code(session_id, sc);
 	if (sc == CODE::BID_SUCCESS)
@@ -530,32 +527,26 @@ STAGE Game_room::get_current_stage()
 	return STAGE::NIGHT1;
 }
 
-void Game_room::switch_stage_calc(bool is_broadcast_location)
+void Game_room::switch_stage_calc()
 {
 	if (stage == STAGE::DAYTIME)
 	{
-		for (auto& p : player)
-		{
-			auto sc = p.second->action_check();
-			if (sc == CODE::NONE)
-				mine(p.first);
-		}
 		while (!heal_que.empty())
 		{
 			auto& [src, des] = heal_que.front();
 			player[src]->heal(*player[des]);
 			heal_que.pop();
 		}
+		for (int i = 0; i < player.size(); i++)
+			atk_graph[i].clear();
 		while (!atk_que.empty())
 		{
-			for (int i = 0; i < player.size(); i++)
-				atk_graph[i].clear();
 			auto& [src, des] = atk_que.front();
 			atk_graph[session_to_game[src]].push_back(session_to_game[des]);
 			player[src]->attack(*player[des]);
-			resource_distributor.solve(&atk_graph, &order_player);
 			atk_que.pop();
 		}
+		resource_distributor.solve(&atk_graph, &order_player);
 		while (!mine_que.empty())
 		{
 			auto n = mine_que.front();
@@ -581,6 +572,12 @@ void Game_room::switch_stage_calc(bool is_broadcast_location)
 			}
 			explore_que.pop();
 		}
+		for (auto& p : player)
+		{
+			auto sc = p.second->action_check();
+			if (sc == CODE::NONE)
+				mine(p.first);
+		}
 	}
 
 	while (!move_que.empty())
@@ -591,10 +588,30 @@ void Game_room::switch_stage_calc(bool is_broadcast_location)
 		player[src]->move(des);
 		move_que.pop();
 	}
-	if (is_broadcast_location)
-		broadcast_base_info();
-	stage = get_current_stage();
+	if (stage == STAGE::DEPATURE0)
+	{
+		for (auto& n : location[0])
+		{
+			std::uniform_int_distribution<int> dist(1, location.size() - 1);
+			if (std::dynamic_pointer_cast<Treasure_hunter>(n) != nullptr)
+				n->move_force(dist(mt));
+		}
+	}
+	if (stage == STAGE::DEPATURE1)
+	{
+		for (auto& n : location[0])
+		{
+			std::uniform_int_distribution<int>dist(1, location.size() - 1);
+			if (std::dynamic_pointer_cast<Evil_spirit>(n) != nullptr)
+			{
+				int dist_location = dist(mt);
+				n->move_force(dist_location);
+			}
+		}
+	}
+	broadcast_base_info();
 	broadcast_switch_stage();
+	stage = get_current_stage();
 }
 
 void Game_room::next_day()

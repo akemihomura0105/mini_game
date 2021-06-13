@@ -149,7 +149,6 @@ private:
 	void night_stage0(bool exec);
 	void night_stage1(int bid_stage, bool exec);
 	void settlement_stage();
-	std::vector<int>get_session_set(int location);
 	void broadcast_time();
 	void broadcast_switch_stage();
 	void broadcast_game_info();
@@ -164,6 +163,6 @@ private:
 
 	void push_state_code(int session_id, const state_code& sc);
 
-	void switch_stage_calc(bool is_broadcast_location = true);
+	void switch_stage_calc();
 	void next_day();
 };

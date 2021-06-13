@@ -39,21 +39,24 @@ private:
 	int session_id;
 	int room_id;
 	Room_info room_info;
+	std::chrono::time_point<std::chrono::steady_clock>start_time;
 
-	int login();
-	std::shared_ptr<Proto_msg> get_msg();
-	boost::system::error_code send_msg(Proto_msg msg);
-
-
-	void show_room();
-	int join_room(int state);
-	int make_room(int state);
+	void receive_session_id(std::shared_ptr<Proto_msg>msg);
+	void login(std::string_view username);
+	void receive_login_result(std::shared_ptr<Proto_msg>msg);
+	void request_room_prop(bool no_cycle = false);
+	void receive_room_prop(std::shared_ptr<Proto_msg>msg);
+	void join_room(int room_id);
+	void receive_join_result(std::shared_ptr<Proto_msg>msg);
+	void make_room(std::string_view user_input);
+	void receive_make_result(std::shared_ptr<Proto_msg>msg);
 	void exit_room();
 
 
-	enum class STATE { HALL, ROOM, GAME };
+	enum class STATE { LOGIN, WAIT_LOGIN, WAIT_JOIN, HALL, ROOM, GAME };
 	STATE state;
 	threadsafe_queue<std::string>input_que;
+	void otp_hall_operation();
 	void otp_room_operation();
 	void otp_game_operation();
 	void hall_system_run();

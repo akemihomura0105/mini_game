@@ -31,24 +31,44 @@ void basic_game_info::next_stage()
 {
 	static int last_turn_time = 0;
 	using namespace CONSTV;
+	Otp_table hint_table;
 	if (stage == STAGE::READY)
 	{
+		if (character_id == 1)
+		{
+			hint_table.resize(1);
+			hint_table.insert({ "ÒÆ¶¯: mv'x'" });
+		}
+
 		stage = STAGE::DEPATURE0;
 		std::cout << "ÐÐ¶¯½×¶Î0\n";
 		action_point = true;
-		if (character_id != 1)
-			std::cout << "Çë½øÐÐÒÆ¶¯\n";
 	}
 	else if (stage == STAGE::DEPATURE0)
 	{
+		if (character_id == 2)
+		{
+			hint_table.resize(1);
+			hint_table.insert({ "ÒÆ¶¯: mv'x'" });
+		}
+
 		stage = STAGE::DEPATURE1;
 		std::cout << "ÐÐ¶¯½×¶Î1\n";
 		stage = STAGE::DEPATURE1;
-		if (character_id == 1)
-			std::cout << "Çë½øÐÐÒÆ¶¯\n";
 	}
 	else if (stage == STAGE::DEPATURE1)
 	{
+		if (character_id == 1)
+		{
+			hint_table.resize(5);
+			hint_table.insert({ "ÒÆ¶¯: mv'x'","ÍÚ¿ó: mine","¹¥»÷: atk'x'","ÖÎÁÆ: heal'x'","Ì½Ë÷: exp" });
+		}
+		if (character_id == 2)
+		{
+			hint_table.resize(4);
+			hint_table.insert({ "ÒÆ¶¯: mv'x'","ÍÚ¿ó: mine","¹¥»÷: atk'x'","ÖÎÁÆ: heal'x'" });
+		}
+
 		stage = STAGE::DAYTIME;
 		turn = 0;
 		action_point = true;
@@ -56,8 +76,21 @@ void basic_game_info::next_stage()
 	}
 	else if (stage == STAGE::DAYTIME)
 	{
+
+
 		if (turn++ < CONSTV::day_turn)
 		{
+			if (character_id == 1)
+			{
+				hint_table.resize(5);
+				hint_table.insert({ "ÒÆ¶¯: mv'x'","ÍÚ¿ó: mine","¹¥»÷: atk'x'","ÖÎÁÆ: heal'x'","Ì½Ë÷: exp" });
+			}
+			if (character_id == 2)
+			{
+				hint_table.resize(4);
+				hint_table.insert({ "ÒÆ¶¯: mv'x'","ÍÚ¿ó: mine","¹¥»÷: atk'x'","ÖÎÁÆ: heal'x'" });
+			}
+
 			action_point = true;
 			std::cout << "°×Ìì, »ØºÏ: " << turn << "\n";
 		}
@@ -69,7 +102,10 @@ void basic_game_info::next_stage()
 	}
 	else if (stage == STAGE::NIGHT0)
 	{
+		hint_table.resize(1);
+		hint_table.insert({ "ÅÄÂô: bid'x'" });
 		std::cout << "Ò¹Íí¶þ½×¶Î\n";
+		stage = STAGE::NIGHT1;
 	}
 	else if (stage == STAGE::NIGHT1)
 	{
@@ -78,7 +114,9 @@ void basic_game_info::next_stage()
 		std::cout << "×¼±¸½×¶Î, µÚ" << day + 1 << "Ìì\n";
 	}
 	std::cout << *this;
-	std::cout << "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n";
+	std::cout << hint_table;
+	std::cout << "******************************************************************************************\n";
+	std::cout << "******************************************************************************************\n";
 }
 
 STAGE basic_game_info::get_current_stage()const

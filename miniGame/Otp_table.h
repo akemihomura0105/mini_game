@@ -10,6 +10,8 @@ public:
 
 	friend std::ostream& operator<<(std::ostream& os, const Otp_table& T);
 
+	void resize(int n);
+	Otp_table();
 	Otp_table(int n);
 
 private:

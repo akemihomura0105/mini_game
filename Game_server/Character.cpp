@@ -95,6 +95,11 @@ void Actionable_character::add_hint(int n)
 	res.hint++;
 }
 
+void Actionable_character::add_coin(int n)
+{
+	res.coin += n;
+}
+
 state_code Actionable_character::action_check()
 {
 	state_code sc;
@@ -125,6 +130,7 @@ state_code Actionable_character::attack(Actionable_character& character, bool tr
 	if (!try_flag)
 	{
 		action_flag = false;
+		add_armo(-1);
 		character.get_damage(1);
 	}
 	return sc;

@@ -2,68 +2,83 @@
 #include "tools.h"
 #include <array>
 
-int System::login()
+void System::run()
 {
-	OTP("请输入用户名");
-	std::string username;
-	std::cin >> username;
-	Proto_msg msg(1, 1);
-	serialize_obj(msg.body, session_id, username);
-	auto ec = send_msg(msg);
-	if (ec)
-		std::cout << ec.message();
-	else
-	{
-		auto reply_msg_ptr = get_msg();
-		state_code sc;
-		deserialize_obj(reply_msg_ptr->body, sc);
-		if (sc == CODE::LOGIN_SUCCESS)
-		{
-			std::cout << "登录成功\n";
-			return 0;
-		}
+	sock->connect(ep);
+	conn = std::make_shared<Tcp_connection>(io, sock, msg_que, session_id);
+	io.post(bind(&System::route, shared_from_this()));
+	io.post(bind(&System::message_route, shared_from_this()));
+	conn->run();
+	state = STATE::LOGIN;
+	std::thread input_t(bind(&System::read_input, shared_from_this()));
+	input_t.detach();
+	io.run();
+}
 
-		if (sc == CODE::LOGIN_REPEATED)
-		{
-			std::cout << "你已经在其他地点登录\n";
-			return 1;
-		}
+void System::receive_session_id(std::shared_ptr<Proto_msg> msg)
+{
+	deserialize_obj(msg->body, session_id);
+	std::cout << "建立了会话：" << session_id << std::endl;
+	std::cout << "请输入login+username，以登录\n";
+}
+
+void System::login(std::string_view username)
+{
+	auto msg = std::make_shared<Proto_msg>(1, 1);
+	std::string username_str(username.begin(), username.end());
+	serialize_obj(msg->body, session_id, username_str);
+	conn->push_event(msg);
+	state = STATE::WAIT_LOGIN;
+}
+
+void System::receive_login_result(std::shared_ptr<Proto_msg>msg)
+{
+	state_code sc;
+	deserialize_obj(msg->body, sc);
+	if (sc == CODE::LOGIN_SUCCESS)
+	{
+		std::cout << "登录成功\n";
+		hall_system_run();
+	}
+	if (sc == CODE::LOGIN_REPEATED)
+	{
+		std::cout << "你已经在其他地点登录\n";
+		system("pause");
+		std::cout << "请输入login+username，以登录\n";
+		state = STATE::LOGIN;
 	}
 }
 
-std::shared_ptr<Proto_msg> System::get_msg()
+void System::request_room_prop(bool no_cycle)
 {
-	auto msg_ptr = std::make_shared<Proto_msg>(1);
-	boost::system::error_code ec;
-	read(*sock, buffer(&msg_ptr->head, sizeof(Proto_head)), ec);
-	if (ec)
-		std::cerr << ec.message() << std::endl;
-	std::cerr << msg_ptr->head.service << "\n";
-	std::cerr << msg_ptr->head.len << std::endl;
-	msg_ptr->body.resize(msg_ptr->head.len);
-	read(*sock, buffer(msg_ptr->body), ec);
-	if (ec)
-		std::cerr << ec.message() << std::endl;
-	return msg_ptr;
+	using namespace std::chrono;
+	static seconds last_request_time = 0s;
+	if (no_cycle)
+	{
+		auto msg = std::make_shared<Proto_msg>(1, 2);
+		serialize_obj(msg->body, session_id);
+		conn->push_event(msg);
+		return;
+	}
+
+	seconds dura = duration_cast<seconds>(steady_clock::now() - start_time);
+	if (dura >= last_request_time + CONSTV::update_room_list_duration)
+	{
+		last_request_time = dura;
+		auto msg = std::make_shared<Proto_msg>(1, 2);
+		serialize_obj(msg->body, session_id);
+		conn->push_event(msg);
+	}
+	io.post(bind(&System::request_room_prop, shared_from_this(), false));
 }
 
-boost::system::error_code System::send_msg(Proto_msg msg)
+void System::receive_room_prop(std::shared_ptr<Proto_msg>msg)
 {
-	boost::system::error_code ec;
-	write(*sock, buffer(*msg.encode()), ec);
-	return ec;
-}
-
-void System::show_room()
-{
-	Proto_msg req_msg(1, 2);
-	serialize_obj(req_msg.body, session_id);
-	send_msg(req_msg);
-	auto res_msg = get_msg();
+	if (state != STATE::HALL)
+		return;
 	std::vector<Room_prop>info_vec;
 	state_code sc;
-	std::cerr << res_msg->body << std::endl;
-	deserialize_obj(res_msg->body, sc, info_vec);
+	deserialize_obj(msg->body, sc, info_vec);
 	Otp_table room_info(3);
 	room_info.insert({ "房间名","房间号","房间人数" });
 	for (const auto& info : info_vec)
@@ -71,68 +86,77 @@ void System::show_room()
 	std::cout << room_info;
 }
 
-int System::join_room(int state)
+void System::join_room(int room_id)
 {
-	Proto_msg req_msg(1, 5);
-	std::cout << "请输入加入房间的房间号：\n";
-	int room_id;
-	std::cin >> room_id;
-	serialize_obj(req_msg.body, session_id, room_id);
-	send_msg(req_msg);
+	auto msg = std::make_shared<Proto_msg>(1, 5);
+	serialize_obj(msg->body, session_id, room_id);
+	conn->push_event(msg);
+	state = STATE::WAIT_JOIN;
+}
 
-	auto res_msg = get_msg();
+void System::receive_join_result(std::shared_ptr<Proto_msg>msg)
+{
+	int room_id;
 	state_code sc;
-	deserialize_obj(res_msg->body, sc);
+	deserialize_obj(msg->body, sc, room_id);
 	if (sc != CODE::NONE)
 	{
 		std::cout << sc.message();
-		return join_room(0);
+		state = STATE::HALL;
+		return;
 	}
 	std::cout << "成功加入房间\n";
 	this->room_id = room_id;
+	room_system_run();
 }
 
-int System::make_room(int state = 0)
+void System::make_room(std::string_view user_input)
 {
 	const std::string please_input_std_format = "请按正确格式输入,如：\n my room name+6\n";
-	if (!state)
-		std::cout << "请输入房间名+人数上限，如：\nmy room name+6\n";
-	else
-		std::cout << please_input_std_format;
-	std::string user_input;
-	while (!isalpha(std::cin.peek()))
-		std::cin.get();
-	std::getline(std::cin, user_input);
 	int offset = user_input.find('+', 0);
 	if (offset == std::string::npos)
-		return make_room(1);
+	{
+		std::cout << "格式错误\n" << please_input_std_format;
+		return;
+	}
 	if (offset == user_input.size() - 1)
-		return make_room(2);
+	{
+		std::cout << "格式错误\n" << please_input_std_format;
+		return;
+	}
 	int capacity = 0;
 	for (int i = offset + 1; i < user_input.size(); i++)
 	{
 		if (!isdigit(user_input[i]))
-			return make_room(3);
+		{
+			std::cout << "格式错误\n" << please_input_std_format;
+			return;
+		}
 		capacity = capacity * 10 + user_input[i] - '0';
 		constexpr int MAX_CAPACITY = 20;
 		if (capacity > MAX_CAPACITY)
 		{
 			std::cout << "人数超限\n" << please_input_std_format;
-			return make_room(3);
+			return;
 		}
 	}
-	Proto_msg req_msg(1, 3);
-	std::string name = user_input.substr(0, offset);
-	serialize_obj(req_msg.body, session_id, name, capacity);
-	send_msg(req_msg);
+	auto msg = std::make_shared<Proto_msg>(1, 3);
+	std::string name = std::string(user_input.substr(0, offset).begin(), user_input.substr(0, offset).end());
+	serialize_obj(msg->body, session_id, name, capacity);
+	conn->push_event(msg);
+}
 
-	auto res_msg = get_msg();
-	deserialize_obj(res_msg->body, room_id);
+void System::receive_make_result(std::shared_ptr<Proto_msg>msg)
+{
+	Room_prop prop;
+	deserialize_obj(msg->body, prop);
+	room_id = prop.id;
 	Otp_table room_info(3);
 	std::cout << "房间已建立";
 	room_info.insert({ "房间名", "房间号", "房间人数" });
-	room_info.insert({ name,std::to_string(room_id),"1/" + std::to_string(capacity) });
+	room_info.insert({ prop.name,std::to_string(room_id),"1/" + std::to_string(prop.capacity) });
 	std::cout << room_info;
+	room_system_run();
 }
 
 void System::exit_room()
@@ -140,24 +164,12 @@ void System::exit_room()
 	auto req_msg = std::make_shared<Proto_msg>(1, 4);
 	serialize_obj(req_msg->body, session_id, room_id);
 	conn->push_event(req_msg);
-}
-
-void System::run()
-{
-	sock->connect(ep);
-	auto msg = get_msg();
-	deserialize_obj(msg->body, session_id);
-	std::cout << "建立了会话：" << session_id << std::endl;
-	conn = std::make_shared<Tcp_connection>(io, sock, msg_que, session_id);
-	while (login());
-	std::cout << "login successfully" << std::endl;
 	hall_system_run();
+	request_room_prop(true);
 }
 
 ASYNC_RET System::route()
 {
-	if (state != STATE::ROOM && state != STATE::GAME)
-		return;
 	if (msg_que.empty())
 	{
 		io.post(bind(&System::route, shared_from_this()));
@@ -167,81 +179,66 @@ ASYNC_RET System::route()
 	msg_que.pop();
 	switch (msg->head.service)
 	{
+	case 0:
+		receive_session_id(msg);
+		break;
+	case 1:
+		receive_login_result(msg);
+		break;
+	case 2:
+		receive_room_prop(msg);
+		break;
+	case 3:
+		receive_make_result(msg);
+		break;
+	case 5:
+		receive_join_result(msg);
+		break;
 	case 6:
-	{
 		update_room_info(msg);
 		break;
-	}
 	case 49:
-	{
 		sync_time(msg);
 		break;
-	}
 	case 50:
-	{
 		game_system_run();
 		break;
-	}
 	case 51:
-	{
 		create_game_info(msg);
 		break;
-	}
 	case 52:
-	{
 		receive_state_code_result(msg);
 		break;
-	}
 	case 53:
-	{
 		receive_location_info(msg);
 		break;
-	}
 	case 54:
-	{
 		receive_hp_info(msg);
 		break;
-	}
 	case 55:
-	{
 		receive_res_info(msg);
 		break;
-	}
 	case 56:
-	{
 		receive_bid_info(msg);
 		break;
-	}
 	case 57:
-	{
 		receive_buyer_info(msg);
 		break;
-	}
 	case 58:
-	{
 		receive_stage_change(msg);
 		break;
-	}
 	case 59:
-	{
 		receive_treasure_result(msg);
 		break;
-	}
 	case 60:
-	{
 		receive_treasure_info(msg);
 		break;
-	}
 	case 61:
-	{
 		game_finish(msg);
 		break;
-	}
 	case 62:
-	{
 		receive_ghost_sight(msg);
 		break;
-	}
 
 	default:
 		std::cerr << "unknown package" << std::endl;
@@ -251,8 +248,6 @@ ASYNC_RET System::route()
 
 ASYNC_RET System::message_route()
 {
-	if (state == STATE::HALL)
-		return hall_system_run();
 	auto input_ptr = input_que.try_pop();
 	if (input_ptr == nullptr)
 	{
@@ -260,13 +255,47 @@ ASYNC_RET System::message_route()
 		return;
 	}
 	std::string_view input = *input_ptr;
+
+	if (state == STATE::LOGIN)
+	{
+		if (input.size() > 6 && input.substr(0, 5) == "login")
+		{
+			login(input.substr(6, input.size() - 6));
+			io.post(bind(&System::message_route, shared_from_this()));
+			return;
+		}
+	}
+
+	if (state == STATE::HALL)
+	{
+		if (input.size() > 3 && input.substr(0, 2) == "mk")
+		{
+			make_room(input.substr(3, input.size() - 3));
+			io.post(bind(&System::message_route, shared_from_this()));
+			return;
+		}
+		if (input.size() > 3 && input.substr(0, 2) == "cd")
+		{
+			int room_id = 0;
+			for (int i = 3; i < input.size(); i++)
+			{
+				if (!isdigit(input[i]))
+				{
+					io.post(bind(&System::message_route, shared_from_this()));
+					return;
+				}
+				room_id = room_id * 10 + input[i] - '0';
+			}
+			join_room(room_id);
+			io.post(bind(&System::message_route, shared_from_this()));
+			return;
+		}
+	}
+
 	if (state == STATE::ROOM)
 	{
 		if (input == "q")
-		{
 			exit_room();
-			state = STATE::HALL;
-		}
 		if (input == "sr")
 			set_ready();
 		if (input == "sg")
@@ -307,12 +336,22 @@ ASYNC_RET System::message_route()
 	}
 	if (input == "?")
 	{
+		if (state == STATE::HALL)
+			otp_hall_operation();
 		if (state == STATE::ROOM)
 			otp_room_operation();
 		if (state == STATE::GAME)
 			otp_game_operation();
 	}
 	io.post(bind(&System::message_route, shared_from_this()));
+}
+
+void System::otp_hall_operation()
+{
+	Otp_table table(2);
+	table.insert({ "加入房间","join 'id'" });
+	table.insert({ "创建房间","mk name" });
+	std::cout << table;
 }
 
 void System::otp_room_operation()
@@ -332,43 +371,12 @@ void System::otp_game_operation()
 void System::hall_system_run()
 {
 	state = STATE::HALL;
-	Otp_table main_screen(2);
-	main_screen.insert({ "显示所有房间" ,"ls" });
-	main_screen.insert({ "创建某个房间" ,"mk" });
-	main_screen.insert({ "进入某个房间" ,"cd" });
-	std::cout << main_screen;
-
-	std::string str;
-	std::cin >> str;
-	if (str == "ls")
-	{
-		show_room();
-		system("pause");
-		return hall_system_run();
-	}
-	if (str == "mk")
-	{
-		make_room();
-		return room_system_run();
-	}
-	if (str == "cd")
-	{
-		join_room(0);
-		return room_system_run();
-	}
-	hall_system_run();
+	request_room_prop();
 }
 
 void System::room_system_run()
 {
 	state = STATE::ROOM;
-	conn->run();
-	io.post(bind(&System::route, shared_from_this()));
-	io.post(bind(&System::message_route, shared_from_this()));
-	//io.post(bind(&System::read_input, shared_from_this()));
-	std::thread input_t(bind(&System::read_input, shared_from_this()));
-	input_t.detach();
-	io.run();
 }
 
 void System::sync_time(std::shared_ptr<Proto_msg>msg)
@@ -398,11 +406,8 @@ void System::update_room_info(std::shared_ptr<Proto_msg>msg)
 
 void System::read_input()
 {
-	if (state == STATE::HALL)
-		return;
 	std::string msg;
 	getline(std::cin, msg);
-	std::cerr << "接收到字符串:" << msg << std::endl;
 	input_que.push(std::move(msg));
 	//io.post(bind(&System::read_input, shared_from_this()));
 	read_input();
@@ -441,7 +446,9 @@ void System::create_game_info(std::shared_ptr<Proto_msg>msg)
 	game_info->character_id = character_id;
 	game_info->HP = hp;
 	game_info->res = res;
-	std::cout << *game_info << "\n";
+	std::cout << *game_info;
+	std::cout << "******************************************************************************************\n";
+	std::cout << "******************************************************************************************\n";
 }
 
 bool System::daytime_action_check()
@@ -645,9 +652,8 @@ void System::receive_buyer_info(std::shared_ptr<Proto_msg>msg)
 {
 	int game_id, price;
 	deserialize_obj(msg->body, game_id, price);
-	if (game_id == game_info->game_id)
-		game_info->res.coin -= price;
-	std::cout << game_info->player[game_id].name << " 购买了本件商品\n";
+	std::cout << game_info->player[game_id].name << "，以 " << price << " 的价格购买了本件商品\n";
+	std::cout << "*********************************************************************************";
 }
 
 void System::receive_stage_change(std::shared_ptr<Proto_msg>msg)

@@ -11,6 +11,15 @@ void Otp_table::insert(std::vector<std::string> vec)
 	}
 }
 
+void Otp_table::resize(int n)
+{
+	len.resize(n);
+}
+
+Otp_table::Otp_table()
+{
+}
+
 Otp_table::Otp_table(int n)
 {
 	len.resize(n);
@@ -18,6 +27,8 @@ Otp_table::Otp_table(int n)
 
 std::ostream& operator<<(std::ostream& os, const Otp_table& T)
 {
+	if (T.len.size() == 0)
+		return os;
 	constexpr int blank = 2;
 	for (int i = 0; i < T.tot_len + T.len.size() * blank + 1; i++)
 		os << '-';
