@@ -134,7 +134,7 @@ void System::join_room(std::shared_ptr<Proto_msg> msg)
 		sc.set(CODE::ROOM_NOT_EXIST);
 	else
 		if (room[room_id]->add_user(session_id, session_to_user[session_id]) == 1)
-			sc.set(CODE::ROOM_FULL)
+			sc.set(CODE::ROOM_FULL);
 	serialize_obj(res_msg->body, sc, room_id);
 	session[session_id]->push_event(res_msg);
 	if (sc == CODE::NONE)
