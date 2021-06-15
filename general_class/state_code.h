@@ -9,7 +9,9 @@ enum  CODE {
 	ROOM_FULL,
 	ROOM_NOT_EXIST,
 	NOT_HOME_OWNER,
+	ROOM_NOT_FULL,
 	NOT_READY,
+	START_GAME,
 	NO_ACTION,
 	ALREADY_DEAD,
 	DIFFERENT_PLACE,
@@ -55,6 +57,7 @@ public:
 	}
 	void set(CODE code);
 	const std::string& message();
+	operator int()const;
 	bool operator==(const state_code& sc)const;
 	bool operator==(const CODE code)const;
 	bool operator!=(const CODE code)const;

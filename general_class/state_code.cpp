@@ -9,7 +9,9 @@ std::string state_code::message_def[1000] = {
 	"房间满员",
 	"房间不存在",
 	"你不是房主",
+	"房间没有满员",
 	"玩家没有全部准备",
+	"游戏开始",
 	"没有行动力",
 	"人物已经死亡",
 	"目标与你不是同一地点",
@@ -42,6 +44,11 @@ void state_code::set(CODE _code)
 const std::string& state_code::message()
 {
 	return message_def[code];
+}
+
+state_code::operator int() const
+{
+	return code;
 }
 
 bool state_code::operator==(const state_code& sc) const

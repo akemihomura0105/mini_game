@@ -18,7 +18,6 @@
 * decode函数暂无具体作用
 */
 
-
 #pragma once
 #include <cstdint>
 #include <boost/asio.hpp>

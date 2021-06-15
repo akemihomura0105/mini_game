@@ -42,6 +42,7 @@ void System::receive_login_result(std::shared_ptr<Proto_msg>msg)
 	}
 	if (sc == CODE::LOGIN_REPEATED)
 	{
+
 		std::cout << "你已经在其他地点登录\n";
 		system("pause");
 		std::cout << "请输入login+username，以登录\n";
@@ -556,27 +557,31 @@ void System::receive_state_code_result(std::shared_ptr<Proto_msg> msg)
 {
 	state_code sc;
 	deserialize_obj(msg->body, sc);
-	if (sc == CODE::MOVE_SUCCESS)
+	switch (sc)
 	{
+	case CODE::START_GAME:
+		break;
+	case CODE::MOVE_SUCCESS:
 		game_info->action_point = false;
-	}
-	if (sc == CODE::ATTACK_SUCCESS)
-	{
+		break;
+	case CODE::ATTACK_SUCCESS:
 		game_info->action_point = false;
 		game_info->res.armo--;
-	}
-	if (sc == CODE::HEAL_SUCCESS)
-	{
+		break;
+	case CODE::HEAL_SUCCESS:
 		game_info->action_point = false;
 		game_info->res.bandage--;
-	}
-	if (sc == CODE::MINE_SUCCESS)
-	{
+		break;
+	case CODE::MINE_SUCCESS:
 		game_info->action_point = false;
 		game_info->res.coin += CONSTV::MINE_COIN;
-	}
-	if (sc == CODE::EXPLORE_RECEIVE)
+		break;
+	case CODE::EXPLORE_RECEIVE:
 		game_info->action_point = false;
+		break;
+	default:
+		break;
+	}
 	std::cout << sc.message() << "\n";
 }
 

@@ -18,7 +18,7 @@ struct Room_prop
 	}
 	std::string name = {};
 	int id = 0;
-	int size = 0;
+	int size = 0;	
 	int capacity = 0;
 };
 

@@ -83,8 +83,6 @@ void System::login(std::shared_ptr<Proto_msg>msg)
 		session_to_user[session_id] = user;
 		sc.set(CODE::LOGIN_SUCCESS);
 		serialize_obj(login_msg->body, sc);
-		std::string str;
-		serialize_obj(str, std::string("ss"));
 		std::cout << "login success\n";
 	}
 	session[session_id]->push_event(login_msg);
@@ -174,19 +172,40 @@ void System::set_ready(std::shared_ptr<Proto_msg> msg)
 
 void System::start_game(std::shared_ptr<Proto_msg> msg)
 {
+	state_code sc;
 	int session_id, room_id;
 	deserialize_obj(msg->body, session_id, room_id);
 	const auto& user = room[room_id]->get_Room_user();
-	if (user.size() != room[room_id]->get_Room_property().capacity
-		|| user.front() != session_id)
-		return;
-	for (auto n : user)
-		if (!session_to_user[n]->is_ready())
-			return;
-	std::cerr << "start game, room id is : " << room_id << "\n";
-	io.post(bind(&System::listen_room, shared_from_this(), room_id));
-	room[room_id]->start_game();
-	auto res_msg = std::make_shared<Proto_msg>(1, 50);
+	bool judge = false;
+	if (!judge && user.front() != session_id)
+	{
+		sc.set(CODE::NOT_HOME_OWNER);
+		judge = true;
+	}
+	if (!judge && user.size() != room[room_id]->get_Room_property().capacity)
+	{
+		sc.set(CODE::ROOM_NOT_FULL);
+		judge = true;
+	}
+	if (!judge)
+	{
+		for (auto n : user)
+		{
+			if (!session_to_user[n]->is_ready())
+			{
+				sc.set(CODE::NOT_READY);
+				judge = true;
+			}
+		}
+	}
+	if (!judge)
+	{
+		io.post(bind(&System::listen_room, shared_from_this(), room_id));
+		room[room_id]->start_game();
+		sc.set(CODE::START_GAME);
+	}
+	auto res_msg = std::make_shared<Proto_msg>(1, 52);
+	serialize_obj(res_msg->body, sc);
 	broadcast_event_in_room(room_id, res_msg);
 }
 

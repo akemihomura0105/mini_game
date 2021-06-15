@@ -3,6 +3,7 @@
 int User::load_user(const std::string& _username, const std::string& _password)
 {
 	username = _username;
+	state = STATE::online;
 	//Unrealized database operations. After these operations, the user info should be loaded into the object.
 	//The following code will be used for bypass testing and will bypass all database related operations.
 	//Begin
@@ -49,4 +50,9 @@ bool User::is_ready()const
 void User::set_ready()
 {
 	ready = !ready;
+}
+
+void User::set_state(STATE st)
+{
+	state = st;
 }

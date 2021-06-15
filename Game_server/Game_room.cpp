@@ -18,6 +18,7 @@ int Game_room::add_user(int session_id, std::shared_ptr <User> _user)
 	prop.size++;
 	users.push_back(session_id);
 	_user->set_room_id(get_id());
+	_user->set_state(User::STATE::inroom);
 	return 0;
 }
 
@@ -35,6 +36,7 @@ int Game_room::remove_user(int session_id, std::shared_ptr<User> _user)
 	if (users.empty())
 		return 2;
 	_user->set_room_id(0);
+	_user->set_state(User::STATE::online);
 	return 0;
 }
 

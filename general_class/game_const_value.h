@@ -8,14 +8,14 @@ namespace CONSTV
 	constexpr seconds update_room_list_duration = 10s;
 
 
-	constexpr seconds ready = 1s;
-	constexpr seconds depature0 = ready + 1s;
-	constexpr seconds depature1 = depature0 + 3s;
-	constexpr int day_turn = 2;
-	constexpr seconds turn_duration = 5s;
+	constexpr seconds ready = 5s;
+	constexpr seconds depature0 = ready + 10s;
+	constexpr seconds depature1 = depature0 + 10s;
+	constexpr int day_turn = 4;
+	constexpr seconds turn_duration = 10s;
 	constexpr seconds daytime = depature1 + day_turn * turn_duration;
-	constexpr seconds night0 = daytime + 5s;
-	constexpr seconds bidding_time = 1s;
+	constexpr seconds night0 = daytime + 10s;
+	constexpr seconds bidding_time = 5s;
 	constexpr seconds night1 = night0 + 100s;
 	constexpr int initial_HP = 10;
 	constexpr int MAX_HP = 10;
