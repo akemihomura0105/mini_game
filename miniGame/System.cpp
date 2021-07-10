@@ -42,7 +42,6 @@ void System::receive_login_result(std::shared_ptr<Proto_msg>msg)
 	}
 	if (sc == CODE::LOGIN_REPEATED)
 	{
-
 		std::cout << "你已经在其他地点登录\n";
 		system("pause");
 		std::cout << "请输入login+username，以登录\n";
