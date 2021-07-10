@@ -1,4 +1,5 @@
 #pragma once
+#include<boost/asio/spawn.hpp>
 #include "User.h"
 #include "Game_room.h"
 #include "ID_generator.h"
@@ -22,7 +23,7 @@ class System :public std::enable_shared_from_this<System>
 public:
 	void run();
 	void close(std::shared_ptr<Proto_msg>msg);
-	void accept_handler(std::shared_ptr<ip::tcp::socket>sock, const boost::system::error_code& ec);
+	void accept_handler(yield_context yield);
 
 	void route();
 	System(io_context& _io, ip::tcp::endpoint& _ep);

@@ -7,7 +7,8 @@ System::System(io_context& _io, ip::tcp::endpoint& _ep) :io(_io), ep(_ep), acp(_
 void System::run()
 {
 	static boost::system::error_code ec;
-	io.post(bind(&System::accept_handler, shared_from_this(), nullptr, ec));
+	auto self = shared_from_this();
+	spawn(io, bind(&System::accept_handler, shared_from_this(), boost::placeholders::_1));
 	io.post(bind(&System::route, shared_from_this()));
 }
 
@@ -19,7 +20,6 @@ void System::close(std::shared_ptr<Proto_msg>msg)
 	session[session_id].reset();
 	if (session_to_user.size() > session_id && session_to_user[session_id] != nullptr)
 	{
-
 		auto user = session_to_user[session_id];
 		//release from room
 		if (user->get_room_id())
@@ -32,14 +32,21 @@ void System::close(std::shared_ptr<Proto_msg>msg)
 	session_register.erase(session_id);
 }
 
-void System::accept_handler(std::shared_ptr<ip::tcp::socket>sock, const boost::system::error_code& ec)
+void System::accept_handler(yield_context yield)
 {
-	if (ec)
+	while (true)
 	{
-		std::cerr << ec.message();
-	}
-	if (sock)
-	{
+		boost::system::error_code ec;
+		auto sock = std::make_shared<ip::tcp::socket>(io);
+		acp.async_accept(*sock, yield[ec]);
+		if (ec)
+		{
+			std::cerr << ec.message();
+			sock->close();
+			continue;
+		}
+
+		//regist the session
 		std::shared_ptr<Tcp_connection>conn;
 		auto session_id = session_gen.generate();
 		session_register[*session_id] = session_id;
@@ -53,10 +60,9 @@ void System::accept_handler(std::shared_ptr<ip::tcp::socket>sock, const boost::s
 		auto msg = std::make_shared<Proto_msg>(1, 0);
 		serialize_obj(msg->body, int(*session_id));
 		conn->push_event(msg);
+		std::cerr << "accept a socket connect successfully\n";
 	}
-	std::cerr << "成功运行accept_handle\n";
-	auto new_sock = std::make_shared<ip::tcp::socket>(io);
-	acp.async_accept(*new_sock, boost::bind(&System::accept_handler, shared_from_this(), new_sock, placeholders::error));
+
 }
 
 void System::login(std::shared_ptr<Proto_msg>msg)
@@ -206,7 +212,10 @@ void System::start_game(std::shared_ptr<Proto_msg> msg)
 	}
 	auto res_msg = std::make_shared<Proto_msg>(1, 52);
 	serialize_obj(res_msg->body, sc);
-	broadcast_event_in_room(room_id, res_msg);
+	if (judge)
+		session[session_id]->push_event(res_msg);
+	else
+		broadcast_event_in_room(room_id, res_msg);
 }
 
 void System::listen_room(int room_id)

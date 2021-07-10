@@ -1,0 +1,11 @@
+service_id: 0	len£º30
+push a event: service_id: 1	len: 0
+send_event:
+	service_id: 1
+	body: 22 serialization::archive 19 1 6 sdfsdf
+service_id: 1	len£º34
+push a event: service_id: 2	len: 0
+send_event:
+	service_id: 2
+	body: 22 serialization::archive 19 1
+service_id: 2	len£º42

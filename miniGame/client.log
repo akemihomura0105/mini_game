@@ -1,147 +1,21 @@
-service_id: 0	len£º30
 push a event: service_id: 1	len: 0
 send_event:
 	service_id: 1
-	body: 22 serialization::archive 18 0 3 sdf
-service_id: 1	len£º34
+	body: 22 serialization::archive 19 0 5 sdfsd
 push a event: service_id: 2	len: 0
 send_event:
 	service_id: 2
-	body: 22 serialization::archive 18 0
-service_id: 2	len£º42
+	body: 22 serialization::archive 19 0
 push a event: service_id: 3	len: 0
 send_event:
 	service_id: 3
-	body: 22 serialization::archive 18 0 3 sdf 1
-service_id: 3	len£º44
-64-------------------------------
-service_id: 6	len£º64
+	body: 22 serialization::archive 19 0 1 s 1
 push a event: service_id: 7	len: 0
 send_event:
 	service_id: 7
-	body: 22 serialization::archive 18 0 1
-64-------------------------------
-service_id: 6	len£º64
-push a event: service_id: 4	len: 0
-push a event: service_id: 2	len: 0
+	body: 22 serialization::archive 19 0 1
+push a event: service_id: 8	len: 0
 send_event:
-	service_id: 4
-	body: 22 serialization::archive 18 0 1
-send_event:
-	service_id: 2
-	body: 22 serialization::archive 18 0
-service_id: 2	len£º42
-push a event: service_id: 2	len: 0
-send_event:
-	service_id: 2
-	body: 22 serialization::archive 18 0
-service_id: 2	len£º42
-push a event: service_id: 2	len: 0
-send_event:
-	service_id: 2
-	body: 22 serialization::archive 18 0
-service_id: 2	len£º42
-push a event: service_id: 2	len: 0
-send_event:
-	service_id: 2
-	body: 22 serialization::archive 18 0
-service_id: 2	len£º56
-push a event: service_id: 5	len: 0
-send_event:
-	service_id: 5
-	body: 22 serialization::archive 18 0 1
-service_id: 5	len£º36
-72-------------------------------
-service_id: 6	len£º72
-push a event: service_id: 7	len: 0
-send_event:
-	service_id: 7
-	body: 22 serialization::archive 18 0 1
-72-------------------------------
-service_id: 6	len£º72
-push a event: service_id: 7	len: 0
-send_event:
-	service_id: 7
-	body: 22 serialization::archive 18 0 1
-72-------------------------------
-service_id: 6	len£º72
-72-------------------------------
-service_id: 6	len£º72
-service_id: 52	len£º34
-service_id: 51	len£º45
-2---------
-push a event: service_id: 2	len: 0
-send_event:
-	service_id: 2
-	body: 22 serialization::archive 18 0
-service_id: 2	len£º56
-service_id: 49	len£º30
-service_id: 49	len£º30
-service_id: 49	len£º30
-service_id: 49	len£º30
-service_id: 54	len£º50
-service_id: 62	len£º36
-service_id: 55	len£º40
-service_id: 62	len£º36
-service_id: 55	len£º40
-service_id: 62	len£º36
-service_id: 55	len£º40
-service_id: 58	len£º0
-service_id: 49	len£º30
-service_id: 49	len£º30
-service_id: 49	len£º30
-service_id: 49	len£º30
-service_id: 49	len£º30
-service_id: 49	len£º31
-push a event: service_id: 2	len: 0
-send_event:
-	service_id: 2
-	body: 22 serialization::archive 18 0
-service_id: 2	len£º56
-service_id: 49	len£º31
-service_id: 49	len£º31
-service_id: 49	len£º31
-service_id: 49	len£º31
-service_id: 62	len£º36
-service_id: 58	len£º0
-service_id: 49	len£º31
-service_id: 49	len£º31
-service_id: 49	len£º31
-service_id: 49	len£º31
-service_id: 49	len£º31
-service_id: 49	len£º31
-push a event: service_id: 2	len: 0
-send_event:
-	service_id: 2
-	body: 22 serialization::archive 18 0
-service_id: 2	len£º56
-service_id: 49	len£º31
-service_id: 49	len£º31
-service_id: 49	len£º31
-service_id: 49	len£º31
-push a event: service_id: 52	len: 0
-send_event:
-	service_id: 52
-	body: 22 serialization::archive 18 0 2 1
-service_id: 52	len£º35
-service_id: 62	len£º36
-service_id: 55	len£º40
-service_id: 62	len£º36
-service_id: 55	len£º40
-service_id: 54	len£º50
-service_id: 62	len£º36
-service_id: 55	len£º40
-service_id: 58	len£º0
-service_id: 49	len£º31
-service_id: 49	len£º31
-service_id: 49	len£º31
-service_id: 49	len£º31
-service_id: 49	len£º31
-service_id: 49	len£º31
-push a event: service_id: 2	len: 0
-send_event:
-	service_id: 2
-	body: 22 serialization::archive 18 0
-service_id: 2	len£º56
-service_id: 49	len£º31
-service_id: 49	len£º31
+	service_id: 8
+	body: 22 serialization::archive 19 0 1
+1---------

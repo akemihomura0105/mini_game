@@ -2,6 +2,7 @@
 #include"../general_class/Game_proto.h"
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
+#include <boost/asio/spawn.hpp>
 #include <memory>
 #include <queue>
 #include <iostream>
@@ -46,11 +47,11 @@ public:
 	void pause();
 	//close the tcp connection, not fully realization.
 	void close();
+	void get_msg(yield_context yield);
 	void get_msg_head();
 	void get_msg_body(std::shared_ptr<Proto_msg>proto_ptr, const boost::system::error_code& ec);
 
 	void push_event(std::shared_ptr<Proto_msg>msg_ptr);
-	ASYNC_RET send_msg(std::shared_ptr<Proto_msg>msg_ptr);
 	bool socket_error_solve(const boost::system::error_code& ec);
 	void socket_error_handle(const boost::system::error_code& ec);
 	~Tcp_connection() { sock->close(); }
@@ -60,7 +61,7 @@ private:
 	std::queue<std::shared_ptr<Proto_msg>>event_que;
 	std::queue<std::shared_ptr<Proto_msg>>& msg_que;
 	bool pause_flag = false;
-	ASYNC_RET send_event(const boost::system::error_code& ec);
+	void send_event();
 	void push_msg(std::shared_ptr<Proto_msg>proto_ptr, const boost::system::error_code& ec);
 	std::string write_buf, read_buf;
 	int session_id;
