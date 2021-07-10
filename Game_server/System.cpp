@@ -1,6 +1,7 @@
 #include "System.h"
 
-System::System(io_context& _io, ip::tcp::endpoint& _ep) :io(_io), ep(_ep), acp(_io, _ep), session_gen(0, 10000)
+System::System(io_context& _io, ip::tcp::endpoint& _system_server_ep, ip::tcp::endpoint& _room_server_ep) :
+	io(_io), system_server_ep(_system_server_ep), room_server_ep(_room_server_ep), acp(_io, _system_server_ep), session_gen(0, 10000)
 {
 }
 
@@ -72,7 +73,7 @@ void System::login(std::shared_ptr<Proto_msg>msg)
 	std::cerr << msg->body;
 	deserialize_obj(msg->body, session_id, username);
 	auto user = std::make_shared<User>();
-	auto login_msg = std::make_shared<Proto_msg>(1, 1);
+	auto login_msg = std::make_shared<Proto_msg>(1, 52);
 	state_code sc;
 	if (username_to_session.find(username) != username_to_session.end())
 	{
@@ -206,7 +207,7 @@ void System::start_game(std::shared_ptr<Proto_msg> msg)
 	}
 	if (!judge)
 	{
-		io.post(bind(&System::listen_room, shared_from_this(), room_id));
+		io.post(bind(&System::send_room_msg_to_client, shared_from_this(), room_id));
 		room[room_id]->start_game();
 		sc.set(CODE::START_GAME);
 	}
@@ -218,15 +219,15 @@ void System::start_game(std::shared_ptr<Proto_msg> msg)
 		broadcast_event_in_room(room_id, res_msg);
 }
 
-void System::listen_room(int room_id)
+void System::send_room_msg_to_client(int room_id)
 {
 	while (room[room_id]->listen())
 	{
 		auto pair = room[room_id]->msg_pop();
+
 		session[pair.first]->push_event(pair.second);
-		std::cerr << "pair message:\n\t" << pair.first << "\n\t" << pair.second->head.service << "\n\t" << pair.second->body << "\n";
 	}
-	io.post(boost::bind(&System::listen_room, shared_from_this(), room_id));
+	io.post(boost::bind(&System::send_room_msg_to_client, shared_from_this(), room_id));
 }
 
 void System::move_location(std::shared_ptr<Proto_msg> msg)
@@ -357,17 +358,9 @@ void System::route()
 	case 57:
 		explore(msg);
 		break;
-	case 100:
-	{
-
-	}
-
 	case 50000:
-	{
 		close(msg);
 		break;
-	}
-
 	default:
 		std::cerr << "undefined service packet\n";
 	}

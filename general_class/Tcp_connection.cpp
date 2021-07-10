@@ -1,4 +1,5 @@
 #include "Tcp_connection.h"
+#include "Tcp_connection.h"
 
 Tcp_connection::Tcp_connection(io_context& _io, std::shared_ptr<ip::tcp::socket> _sock,
 	std::queue<std::shared_ptr<Proto_msg>>& _msg_que, int _session_id)
@@ -25,7 +26,7 @@ void Tcp_connection::close()
 	auto msg = std::make_shared<Proto_msg>(1, 50000);
 	serialize_obj(msg->body, session_id);
 	msg_que.push(msg);
-} 
+}
 
 void Tcp_connection::get_msg(yield_context yield)
 {
@@ -34,18 +35,12 @@ void Tcp_connection::get_msg(yield_context yield)
 		auto proto_ptr = std::make_shared<Proto_msg>();
 		boost::system::error_code ec;
 		async_read(*sock, buffer(&proto_ptr->head, sizeof(Proto_head)), yield[ec]);
-		if (ec)
-		{
-			std::cerr << ec.message();
-			continue;
-		}
+		if (socket_error_solve(ec))
+			return;
 		proto_ptr->body.resize(proto_ptr->head.len);
 		async_read(*sock, buffer(proto_ptr->body, proto_ptr->head.len), yield[ec]);
-		if (ec)
-		{
-			std::cerr << ec.message();
-			continue;
-		}
+		if (socket_error_solve(ec))
+			return;
 		msg_que.push(proto_ptr);
 	}
 }
@@ -68,11 +63,8 @@ void Tcp_connection::send_event()
 			reply_msg->encode(write_buf);
 			std::cerr << "send_event:\n\tservice_id: " << reply_msg->head.service << "\n\tbody: " << reply_msg->body << std::endl;
 			async_write(*sock, buffer(write_buf, reply_msg->head.len + sizeof(Proto_head)), yield[ec]);
-			if (ec)
-			{
-				std::cerr << ec.message() << std::endl;
-				sock->close();
-			}
+			if (socket_error_solve(ec))
+				return;
 			});
 	}
 	io.post(bind(&Tcp_connection::send_event, shared_from_this()));
@@ -82,21 +74,14 @@ bool Tcp_connection::socket_error_solve(const boost::system::error_code& ec)
 {
 	if (ec)
 	{
+		if (ec == error::connection_reset || ec == error::eof)
+		{
+			auto msg = std::make_shared<Proto_msg>(1, 50000);
+			serialize_obj(msg->body, session_id);
+			msg_que.push(msg);
+		}
 		std::cerr << ec.message();
-		pause();
-		sock->close();
-		close();
 		return true;
 	}
 	return false;
-}
-
-void Tcp_connection::socket_error_handle(const boost::system::error_code& ec)
-{
-	if (ec)
-	{
-		std::cerr << ec.message();
-		sock->close();
-		close();
-	}
 }

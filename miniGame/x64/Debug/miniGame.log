@@ -1,1 +1,33 @@
-﻿  miniGame.vcxproj -> E:\my_project\mini_game\x64\Debug\miniGame.exe
+﻿  unity_I2WQ05TOF0IMYBIC.cpp
+E:\my_project\mini_game\Game_server\User.h(36,1): warning C4267: “return”: 从“size_t”转换到“int”，可能丢失数据
+  Please define _WIN32_WINNT or _WIN32_WINDOWS appropriately. For example:
+  - add -D_WIN32_WINNT=0x0601 to the compiler command line; or
+  - add _WIN32_WINNT=0x0601 to your project's Preprocessor Definitions.
+  Assuming _WIN32_WINNT=0x0601 (i.e. Windows 7 target).
+E:\my_project\mini_game\general_class\Game_proto.cpp(5,52): warning C4244: “参数”: 从“uint16_t”转换到“T”，可能丢失数据
+          with
+          [
+              T=uint_least8_t
+          ]
+E:\my_project\mini_game\general_class\Game_proto.cpp(6,72): warning C4244: “参数”: 从“uint16_t”转换到“T”，可能丢失数据
+          with
+          [
+              T=uint_least8_t
+          ]
+E:\my_project\mini_game\general_class\Game_proto.cpp(11,24): warning C4267: “参数”: 从“size_t”转换到“T”，可能丢失数据
+          with
+          [
+              T=uint_least32_t
+          ]
+E:\my_project\mini_game\general_class\Game_proto.cpp(21,24): warning C4267: “参数”: 从“size_t”转换到“T”，可能丢失数据
+          with
+          [
+              T=uint_least32_t
+          ]
+C:\boost\boost\bind.hpp(41): message : The practice of declaring the Bind placeholders (_1, _2, ...) in the global namespace is deprecated. Please use <boost/bind/bind.hpp> + using namespace boost::placeholders, or define BOOST_BIND_GLOBAL_PLACEHOLDERS to retain the current behavior.
+E:\my_project\mini_game\general_class\Resource.h(54,71): warning C4244: “参数”: 从“time_t”转换到“unsigned int”，可能丢失数据
+E:\my_project\mini_game\miniGame\Otp_table.cpp(8,20): warning C4267: “-=”: 从“size_t”转换到“int”，可能丢失数据
+E:\my_project\mini_game\miniGame\Otp_table.cpp(10,20): warning C4267: “+=”: 从“size_t”转换到“int”，可能丢失数据
+E:\my_project\mini_game\miniGame\System.cpp(98,38): warning C4267: “初始化”: 从“size_t”转换到“int”，可能丢失数据
+E:\my_project\mini_game\miniGame\System.cpp(402): warning C4717: “System::read_input”: 如递归所有控件路径，函数将导致运行时堆栈溢出
+  miniGame.vcxproj -> E:\my_project\mini_game\x64\Debug\miniGame.exe

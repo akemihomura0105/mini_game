@@ -7,6 +7,7 @@
 #include "../general_class/Tcp_connection.h"
 #include "../general_class/state_code.h"
 #include "../general_class/Room_info.h"
+#include <fstream>
 #include <random>
 #include <boost/asio.hpp>
 #include <thread>
@@ -26,10 +27,11 @@ public:
 	void accept_handler(yield_context yield);
 
 	void route();
-	System(io_context& _io, ip::tcp::endpoint& _ep);
+	System(io_context& _io, ip::tcp::endpoint& system__server_ep, ip::tcp::endpoint& room_server_ep);
 private:
 	io_context& io;
-	ip::tcp::endpoint& ep;
+	ip::tcp::endpoint system_server_ep;
+	ip::tcp::endpoint room_server_ep;
 	ip::tcp::acceptor acp;
 
 	ID_generator<int>session_gen;
@@ -49,7 +51,7 @@ private:
 
 	void set_ready(std::shared_ptr<Proto_msg>msg);
 	void start_game(std::shared_ptr<Proto_msg>msg);
-	void listen_room(int room_id);
+	void send_room_msg_to_client(int room_id);
 
 	void move_location(std::shared_ptr<Proto_msg>msg);
 	void attack(std::shared_ptr<Proto_msg>msg);

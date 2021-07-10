@@ -11,6 +11,7 @@ Game_room::Room_property::Room_property(bool init)
 * return 0: add normally
 * return 1: full room
 */
+
 int Game_room::add_user(int session_id, std::shared_ptr <User> _user)
 {
 	if (users.size() == prop.capacity)
@@ -21,7 +22,6 @@ int Game_room::add_user(int session_id, std::shared_ptr <User> _user)
 	_user->set_state(User::STATE::inroom);
 	return 0;
 }
-
 
 // return 0: delete normally
 // return 1: users not found;

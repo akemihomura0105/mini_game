@@ -7,6 +7,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "miniGame", "miniGame\miniGa
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Game_server", "Game_server\Game_server.vcxproj", "{0F29C7F4-E5F0-413F-ADCF-07B7894DDE6F}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Room_server", "Room_server\Room_server.vcxproj", "{B3D47591-31CD-4B5A-8163-42B685FAB04E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -31,6 +33,14 @@ Global
 		{0F29C7F4-E5F0-413F-ADCF-07B7894DDE6F}.Release|x64.Build.0 = Release|x64
 		{0F29C7F4-E5F0-413F-ADCF-07B7894DDE6F}.Release|x86.ActiveCfg = Release|Win32
 		{0F29C7F4-E5F0-413F-ADCF-07B7894DDE6F}.Release|x86.Build.0 = Release|Win32
+		{B3D47591-31CD-4B5A-8163-42B685FAB04E}.Debug|x64.ActiveCfg = Debug|x64
+		{B3D47591-31CD-4B5A-8163-42B685FAB04E}.Debug|x64.Build.0 = Debug|x64
+		{B3D47591-31CD-4B5A-8163-42B685FAB04E}.Debug|x86.ActiveCfg = Debug|Win32
+		{B3D47591-31CD-4B5A-8163-42B685FAB04E}.Debug|x86.Build.0 = Debug|Win32
+		{B3D47591-31CD-4B5A-8163-42B685FAB04E}.Release|x64.ActiveCfg = Release|x64
+		{B3D47591-31CD-4B5A-8163-42B685FAB04E}.Release|x64.Build.0 = Release|x64
+		{B3D47591-31CD-4B5A-8163-42B685FAB04E}.Release|x86.ActiveCfg = Release|Win32
+		{B3D47591-31CD-4B5A-8163-42B685FAB04E}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -43,7 +43,6 @@ private:
 
 	void receive_session_id(std::shared_ptr<Proto_msg>msg);
 	void login(std::string_view username);
-	void receive_login_result(std::shared_ptr<Proto_msg>msg);
 	void request_room_prop(bool no_cycle = false);
 	void receive_room_prop(std::shared_ptr<Proto_msg>msg);
 	void join_room(int room_id);

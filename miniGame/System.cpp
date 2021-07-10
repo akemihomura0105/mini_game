@@ -31,24 +31,6 @@ void System::login(std::string_view username)
 	state = STATE::WAIT_LOGIN;
 }
 
-void System::receive_login_result(std::shared_ptr<Proto_msg>msg)
-{
-	state_code sc;
-	deserialize_obj(msg->body, sc);
-	if (sc == CODE::LOGIN_SUCCESS)
-	{
-		std::cout << "登录成功\n";
-		hall_system_run();
-	}
-	if (sc == CODE::LOGIN_REPEATED)
-	{
-		std::cout << "你已经在其他地点登录\n";
-		system("pause");
-		std::cout << "请输入login+username，以登录\n";
-		state = STATE::LOGIN;
-	}
-}
-
 void System::request_room_prop(bool no_cycle)
 {
 	using namespace std::chrono;
@@ -181,9 +163,6 @@ ASYNC_RET System::route()
 	{
 	case 0:
 		receive_session_id(msg);
-		break;
-	case 1:
-		receive_login_result(msg);
 		break;
 	case 2:
 		receive_room_prop(msg);
