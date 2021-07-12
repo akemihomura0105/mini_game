@@ -24,33 +24,21 @@ class Game_room :public std::enable_shared_from_this<Game_room>
 {
 public:
 	Game_room(io_context& io, const Room_info& info);
-
+	void run();
+	void link_player(int session_id, std::shared_ptr<Tcp_connection>conn);
 	//开始游戏后所需函数---------------------------------------------------
-
-
-	//监听回合，若当前回合已经进入结算，则处理数据包。
-	bool listen();
-	//弹出消息队列中的消息
-	std::pair<int, std::shared_ptr<Proto_msg>>msg_pop();
-	//根据会话号获取玩家信息
-	std::shared_ptr<Actionable_character> get_player(int session_id);
-	void change_location(std::shared_ptr<Proto_msg>);
-	void attack(std::shared_ptr<Proto_msg>);
-	void heal(std::shared_ptr<Proto_msg>);
-	void mine(std::shared_ptr<Proto_msg>);
-	void explore(std::shared_ptr<Proto_msg>);
-	void bid(std::shared_ptr<Proto_msg>);
 private:
+
+
+
 	std::queue<std::shared_ptr<Proto_msg>>msg_que;
 	std::unordered_map<int, std::shared_ptr<Tcp_connection>>session;
 	Room_info room_info;
 	io_context& io;
 	std::mt19937 mt;
-	std::list<int>users;
-	int rome_owner = 0;
-	STAGE stage;
-	STAGE get_current_stage();
-	int turn_num;
+	std::chrono::time_point<std::chrono::steady_clock> room_create_time;
+	int init_player = 0;
+
 
 	//游戏阶段：
 	// 	   1. 开始阶段：初始化角色信息。
@@ -63,6 +51,10 @@ private:
 	// 
 	// 
 	//开始游戏后所需要数据与函数--------------------------------------------
+
+	STAGE stage;
+	STAGE get_current_stage();
+	int turn_num;
 
 	//Mapping from the session_id to the character.
 	std::unordered_map<int, std::shared_ptr<Actionable_character>>player;
@@ -97,10 +89,16 @@ private:
 	std::chrono::seconds last_turn_time;
 	std::chrono::seconds last_bid_time;
 	std::chrono::time_point<std::chrono::steady_clock>today_time;
-
 	std::chrono::milliseconds last_broadcast_time;
 
-	//convert the list form to the unordered_map form.
+	void start_game();
+	void change_location(std::shared_ptr<Proto_msg>);
+	void attack(std::shared_ptr<Proto_msg>);
+	void heal(std::shared_ptr<Proto_msg>);
+	void mine(std::shared_ptr<Proto_msg>);
+	void explore(std::shared_ptr<Proto_msg>);
+	void bid(std::shared_ptr<Proto_msg>);
+
 	void load_player();
 	std::chrono::seconds get_duration();
 	void ready_stage(bool exec);

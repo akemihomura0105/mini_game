@@ -29,5 +29,6 @@ E:\my_project\mini_game\general_class\Resource.h(54,71): warning C4244: “参�
 E:\my_project\mini_game\miniGame\Otp_table.cpp(8,20): warning C4267: “-=”: 从“size_t”转换到“int”，可能丢失数据
 E:\my_project\mini_game\miniGame\Otp_table.cpp(10,20): warning C4267: “+=”: 从“size_t”转换到“int”，可能丢失数据
 E:\my_project\mini_game\miniGame\System.cpp(98,38): warning C4267: “初始化”: 从“size_t”转换到“int”，可能丢失数据
-E:\my_project\mini_game\miniGame\System.cpp(402): warning C4717: “System::read_input”: 如递归所有控件路径，函数将导致运行时堆栈溢出
+E:\my_project\mini_game\miniGame\System.cpp(421): warning C4717: “System::read_input”: 如递归所有控件路径，函数将导致运行时堆栈溢出
+    正在创建库 E:\my_project\mini_game\x64\Debug\miniGame.lib 和对象 E:\my_project\mini_game\x64\Debug\miniGame.exp
   miniGame.vcxproj -> E:\my_project\mini_game\x64\Debug\miniGame.exe

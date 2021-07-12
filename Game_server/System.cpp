@@ -1,7 +1,7 @@
 #include "System.h"
 
-System::System(io_context& _io, ip::tcp::endpoint& _system_server_ep, ip::tcp::endpoint& _room_server_ep) :
-	io(_io), system_server_ep(_system_server_ep), room_server_ep(_room_server_ep), acp(_io, _system_server_ep), session_gen(0, 10000)
+System::System(io_context& _io, ip::tcp::endpoint& _system_server_ep) :
+	io(_io), system_server_ep(_system_server_ep), acp(_io, _system_server_ep), session_gen(0, 10000)
 {
 }
 
@@ -57,13 +57,20 @@ void System::accept_handler(yield_context yield)
 		else
 			session[*session_id] = conn;
 
-		io.post(bind(&Tcp_connection::run, conn));
+		conn->run();
 		auto msg = std::make_shared<Proto_msg>(1, 0);
 		serialize_obj(msg->body, int(*session_id));
 		conn->push_event(msg);
 		std::cerr << "accept a socket connect successfully\n";
 	}
 
+}
+
+void System::regist_room_server(std::shared_ptr<Proto_msg> msg)
+{
+	int server_id;
+	deserialize_obj(msg->body, server_id);
+	room_server[server_id] = Tcp_connection::get_conn_from_body(msg->body);
 }
 
 void System::login(std::shared_ptr<Proto_msg>msg)
@@ -207,72 +214,30 @@ void System::start_game(std::shared_ptr<Proto_msg> msg)
 	}
 	if (!judge)
 	{
-		io.post(bind(&System::send_room_msg_to_client, shared_from_this(), room_id));
-		room[room_id]->start_game();
-		sc.set(CODE::START_GAME);
+		auto msg = std::make_shared<Proto_msg>(1, 501);
+		serialize_obj(msg->body, get_room_info(room_id));
+		room_server[0]->push_event(msg);		
+		return;
 	}
 	auto res_msg = std::make_shared<Proto_msg>(1, 52);
 	serialize_obj(res_msg->body, sc);
 	if (judge)
 		session[session_id]->push_event(res_msg);
-	else
-		broadcast_event_in_room(room_id, res_msg);
 }
 
-void System::send_room_msg_to_client(int room_id)
+void System::receive_room_server_start_ack(std::shared_ptr<Proto_msg> msg)
 {
-	while (room[room_id]->listen())
-	{
-		auto pair = room[room_id]->msg_pop();
-
-		session[pair.first]->push_event(pair.second);
-	}
-	io.post(boost::bind(&System::send_room_msg_to_client, shared_from_this(), room_id));
+	int room_id;
+	deserialize_obj(msg->body, room_id);
+	std::string ip, port;
+	ip = "127.0.0.1";
+	port = "10000";
+	auto res_msg = std::make_shared<Proto_msg>(1, 50);
+	serialize_obj(res_msg->body, ip, port);
+	broadcast_event_in_room(room_id, res_msg);
 }
 
-void System::move_location(std::shared_ptr<Proto_msg> msg)
-{
-	int session_id, location, room_id;
-	deserialize_obj(msg->body, session_id, location, room_id);
-	room[room_id]->change_location(session_id, location);
-}
-
-void System::attack(std::shared_ptr<Proto_msg> msg)
-{
-	int src, des, room_id;
-	deserialize_obj(msg->body, src, des, room_id);
-	room[room_id]->attack(src, des);
-}
-
-void System::heal(std::shared_ptr<Proto_msg> msg)
-{
-	int src, des, room_id;
-	deserialize_obj(msg->body, src, des, room_id);
-	room[room_id]->heal(src, des);
-}
-
-void System::mine(std::shared_ptr<Proto_msg> msg)
-{
-	int session_id, room_id;
-	deserialize_obj(msg->body, session_id, room_id);
-	room[room_id]->mine(session_id);
-}
-
-void System::bid(std::shared_ptr<Proto_msg>msg)
-{
-	int session_id, room_id, price;
-	deserialize_obj(msg->body, session_id, room_id, price);
-	room[room_id]->bid(session_id, price);
-}
-
-void System::explore(std::shared_ptr<Proto_msg> msg)
-{
-	int session_id, room_id;
-	deserialize_obj(msg->body, session_id, room_id);
-	room[room_id]->explore(session_id);
-}
-
-void System::broadcast_room_info(int room_id)
+const Room_info System::get_room_info(int room_id)const
 {
 	Room_info info;
 	const auto& prop = room[room_id]->get_Room_property();
@@ -285,6 +250,12 @@ void System::broadcast_room_info(int room_id)
 		const auto& user = session_to_user[n];
 		info.user.emplace_back(n, user->get_username(), user->is_ready());
 	}
+	return info;
+}
+
+void System::broadcast_room_info(int room_id)
+{
+	Room_info info = get_room_info(room_id);
 	auto msg = std::make_shared<Proto_msg>(1, 6);
 	serialize_obj(msg->body, info);
 	broadcast_event_in_room(room_id, msg);
@@ -340,23 +311,11 @@ void System::route()
 	case 8:
 		start_game(msg);
 		break;
-	case 52:
-		move_location(msg);
+	case 502:
+		receive_room_server_start_ack(msg);
 		break;
-	case 53:
-		attack(msg);
-		break;
-	case 54:
-		heal(msg);
-		break;
-	case 55:
-		mine(msg);
-		break;
-	case 56:
-		bid(msg);
-		break;
-	case 57:
-		explore(msg);
+	case 1000:
+		regist_room_server(msg);
 		break;
 	case 50000:
 		close(msg);

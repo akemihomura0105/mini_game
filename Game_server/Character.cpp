@@ -143,6 +143,7 @@ state_code Actionable_character::treasure_hunt(bool try_flag)
 		res.coin += bonus;
 		action_flag = false;
 	}
+	return sc;
 }
 
 state_code Actionable_character::move(int target_location, bool try_flag)

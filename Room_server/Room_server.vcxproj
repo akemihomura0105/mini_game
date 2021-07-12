@@ -150,6 +150,7 @@
     <ClCompile Include="Character.cpp" />
     <ClCompile Include="Character_factory.cpp" />
     <ClCompile Include="Game_room.cpp" />
+    <ClCompile Include="main.cpp" />
     <ClCompile Include="Resource_distributor.cpp" />
     <ClCompile Include="Room_server.cpp" />
   </ItemGroup>
@@ -166,6 +167,7 @@
     <ClInclude Include="Character_factory.h" />
     <ClInclude Include="Game_room.h" />
     <ClInclude Include="Resource_distributor.h" />
+    <ClInclude Include="Room_server.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

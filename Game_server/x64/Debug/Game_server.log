@@ -26,20 +26,7 @@ E:\my_project\mini_game\general_class\Game_proto.cpp(21,24): warning C4267: “�
 C:\boost\boost\bind.hpp(41): message : The practice of declaring the Bind placeholders (_1, _2, ...) in the global namespace is deprecated. Please use <boost/bind/bind.hpp> + using namespace boost::placeholders, or define BOOST_BIND_GLOBAL_PLACEHOLDERS to retain the current behavior.
 E:\my_project\mini_game\general_class\Resource.h(54,71): warning C4244: “参数”: 从“time_t”转换到“unsigned int”，可能丢失数据
 E:\my_project\mini_game\Game_server\User.h(36,1): warning C4267: “return”: 从“size_t”转换到“int”，可能丢失数据
-E:\my_project\mini_game\Game_server\Game_room.cpp(78,137): warning C4244: “参数”: 从“time_t”转换到“unsigned int”，可能丢失数据
-E:\my_project\mini_game\Game_server\Game_room.cpp(121,70): warning C4244: “参数”: 从“time_t”转换到“unsigned int”，可能丢失数据
-E:\my_project\mini_game\Game_server\Game_room.cpp(616,66): warning C4267: “参数”: 从“size_t”转换到“_Ty”，可能丢失数据
-          with
-          [
-              _Ty=int
-          ]
-E:\my_project\mini_game\Game_server\Game_room.cpp(634,66): warning C4267: “参数”: 从“size_t”转换到“_Ty”，可能丢失数据
-          with
-          [
-              _Ty=int
-          ]
 E:\my_project\mini_game\Game_server\Resource_distributor.cpp(134,63): warning C4267: “参数”: 从“size_t”转换到“int”，可能丢失数据
-E:\my_project\mini_game\Game_server\Character.cpp(146): warning C4715: “Actionable_character::treasure_hunt”: 不是所有的控件路径都返回值
 E:\my_project\mini_game\Game_server\Character_factory.cpp(16): warning C4715: “Character_factory::create”: 不是所有的控件路径都返回值
     正在创建库 E:\my_project\mini_game\x64\Debug\Game_server.lib 和对象 E:\my_project\mini_game\x64\Debug\Game_server.exp
   Game_server.vcxproj -> E:\my_project\mini_game\x64\Debug\Game_server.exe

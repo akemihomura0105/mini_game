@@ -27,11 +27,11 @@ public:
 	void accept_handler(yield_context yield);
 
 	void route();
-	System(io_context& _io, ip::tcp::endpoint& system__server_ep, ip::tcp::endpoint& room_server_ep);
+	System(io_context& _io, ip::tcp::endpoint& system__server_ep);
 private:
 	io_context& io;
 	ip::tcp::endpoint system_server_ep;
-	ip::tcp::endpoint room_server_ep;
+	std::unordered_map<int, std::shared_ptr<Tcp_connection>>room_server;
 	ip::tcp::acceptor acp;
 
 	ID_generator<int>session_gen;
@@ -41,6 +41,7 @@ private:
 	std::unordered_map<std::string, int>username_to_session;//key:session_id, value:User
 	std::vector<std::shared_ptr<User>>session_to_user;
 
+	void regist_room_server(std::shared_ptr<Proto_msg>msg);
 	void login(std::shared_ptr<Proto_msg>msg);
 
 	void show_room(std::shared_ptr<Proto_msg>msg);
@@ -51,15 +52,10 @@ private:
 
 	void set_ready(std::shared_ptr<Proto_msg>msg);
 	void start_game(std::shared_ptr<Proto_msg>msg);
+	void receive_room_server_start_ack(std::shared_ptr<Proto_msg> msg);
 	void send_room_msg_to_client(int room_id);
 
-	void move_location(std::shared_ptr<Proto_msg>msg);
-	void attack(std::shared_ptr<Proto_msg>msg);
-	void heal(std::shared_ptr<Proto_msg>msg);
-	void mine(std::shared_ptr<Proto_msg>msg);
-	void bid(std::shared_ptr<Proto_msg>msg);
-	void explore(std::shared_ptr<Proto_msg>msg);
-
+	const Room_info get_room_info(int room_id)const;
 	void broadcast_room_info(int room_id);
 	void broadcast_event_in_room(int room_id, std::shared_ptr<Proto_msg>msg);
 	void delete_room(int room_id);

@@ -32,9 +32,11 @@ public:
 
 private:
 	io_context& io;
-	ip::tcp::endpoint& ep;
+	ip::tcp::endpoint ep;
 	std::shared_ptr<ip::tcp::socket>sock;
 	std::shared_ptr<Tcp_connection>conn;
+	std::shared_ptr<Tcp_connection>room_conn;
+	std::shared_ptr<ip::tcp::socket>room_sock;
 	std::queue<std::shared_ptr<Proto_msg>>msg_que;
 	int session_id;
 	int room_id;
@@ -62,7 +64,7 @@ private:
 	void room_system_run();
 
 	void sync_time(std::shared_ptr<Proto_msg>msg);
-	void game_system_run();
+	void game_system_run(std::shared_ptr<Proto_msg>msg, yield_context yield);
 	void update_room_info(std::shared_ptr<Proto_msg>msg);
 
 	void read_input();
@@ -70,8 +72,8 @@ private:
 	void set_ready();
 	void start_game();
 
-	ASYNC_RET route();
-	ASYNC_RET message_route();
+	void route();
+	void message_route();
 
 	std::shared_ptr<basic_game_info>game_info;
 	void create_game_info(std::shared_ptr<Proto_msg>msg);
@@ -93,5 +95,4 @@ private:
 	void receive_buyer_info(std::shared_ptr<Proto_msg>msg);
 	void receive_stage_change(std::shared_ptr<Proto_msg>msg);
 	void game_finish(std::shared_ptr<Proto_msg>msg);
-	void next_day();
 };

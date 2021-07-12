@@ -180,7 +180,8 @@ ASYNC_RET System::route()
 		sync_time(msg);
 		break;
 	case 50:
-		game_system_run();
+		using namespace boost::placeholders;
+		spawn(bind(&System::game_system_run, shared_from_this(), msg, _1));
 		break;
 	case 51:
 		create_game_info(msg);
@@ -225,7 +226,7 @@ ASYNC_RET System::route()
 	io.post(bind(&System::route, shared_from_this()));
 }
 
-ASYNC_RET System::message_route()
+void System::message_route()
 {
 	auto input_ptr = input_que.try_pop();
 	if (input_ptr == nullptr)
@@ -373,9 +374,27 @@ void System::sync_time(std::shared_ptr<Proto_msg>msg)
 	deserialize_obj(msg->body, game_info->now_time);
 }
 
-void System::game_system_run()
+void System::game_system_run(std::shared_ptr<Proto_msg>msg, yield_context yield)
 {
 	state = STATE::GAME;
+	std::string ip, port;
+	deserialize_obj(msg->body, ip, port);
+	ip::tcp::endpoint ep(ip::address::from_string(ip), stoi(port));
+	boost::system::error_code ec;
+	room_sock = std::make_shared<ip::tcp::socket>(io);
+	room_sock->async_connect(ep, yield[ec]);
+	if (ec)
+	{
+		std::cerr << ec.message();
+		return;
+	}
+	room_conn = std::make_shared<Tcp_connection>(io, room_sock, msg_que, session_id);
+	room_conn->run();
+	auto req_msg = std::make_shared<Proto_msg>(1, 1001);
+	//temporary verify code, wait for coding.
+	constexpr int tmp_verify_code = 111;
+	serialize_obj(req_msg->body, session_id, room_id, tmp_verify_code);
+	room_conn->push_event(req_msg);
 }
 
 void System::update_room_info(std::shared_ptr<Proto_msg>msg)
@@ -417,7 +436,6 @@ void System::start_game()
 
 void System::create_game_info(std::shared_ptr<Proto_msg>msg)
 {
-	game_system_run();
 	int character_id, hp;
 	Resource res;
 	deserialize_obj(msg->body, character_id, hp, res);

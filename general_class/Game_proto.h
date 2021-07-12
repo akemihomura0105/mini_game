@@ -15,7 +15,6 @@
 * 通过将协议体作为缓冲区，调用serialize_obj，将对象序列化至协议体。
 * 若要发送数据包：通过调用Proto_msg::encode，可将数据包转换成字节流，存入并返回std::string。
 * 数据包的接受定义在文件Tcp_connection.h中，需要手动读入包头，完成包头解析，并进行传输。
-* decode函数暂无具体作用
 */
 
 #pragma once

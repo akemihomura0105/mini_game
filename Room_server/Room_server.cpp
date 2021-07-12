@@ -1,20 +1,97 @@
-﻿// Room_server.cpp : 此文件包含 "main" 函数。程序执行将在此处开始并结束。
-//
+﻿#include "Room_server.h"
 
-#include <iostream>
-
-int main()
+Room_system::Room_system(io_context& _io, ip::tcp::endpoint& _room_ep) :io(_io), room_ep(_room_ep), acp(io, room_ep)
 {
-    std::cout << "Hello World!\n";
 }
 
-// 运行程序: Ctrl + F5 或调试 >“开始执行(不调试)”菜单
-// 调试程序: F5 或调试 >“开始调试”菜单
+void Room_system::run(yield_context yield)
+{
+	auto ptr = shared_from_this();
+	std::string system_ip = "127.0.0.1";
+	std::string system_port = "12345";
+	boost::system::error_code ec;
+	ip::tcp::endpoint ep(ip::address::from_string(system_ip), stoi(system_port));
+	auto sock = std::make_shared<ip::tcp::socket>(io);
+	sock->async_connect(ep, yield[ec]);
+	if (ec)
+	{
+		std::cerr << ec.message();
+		return;
+	}
+	conn = std::make_shared<Tcp_connection>(io, sock, msg_que, 0);
+	conn->run();
+	auto msg = std::make_shared<Proto_msg>(1, 1000);
+	constexpr int server_id = 0;
+	serialize_obj(msg->body, server_id);
+	conn->push_event(msg);
+	spawn(io, bind(&Room_system::accept_handler, shared_from_this(), boost::placeholders::_1));
+	io.post(bind(&Room_system::route, shared_from_this()));
+}
 
-// 入门使用技巧: 
-//   1. 使用解决方案资源管理器窗口添加/管理文件
-//   2. 使用团队资源管理器窗口连接到源代码管理
-//   3. 使用输出窗口查看生成输出和其他消息
-//   4. 使用错误列表窗口查看错误
-//   5. 转到“项目”>“添加新项”以创建新的代码文件，或转到“项目”>“添加现有项”以将现有代码文件添加到项目
-//   6. 将来，若要再次打开此项目，请转到“文件”>“打开”>“项目”并选择 .sln 文件
+void Room_system::accept_handler(yield_context yield)
+{
+	while (true)
+	{
+		boost::system::error_code ec;
+		auto sock = std::make_shared<ip::tcp::socket>(io);
+		acp.async_accept(*sock, yield[ec]);
+		if (ec)
+		{
+			std::cerr << ec.message();
+			sock->close();
+			continue;
+		}
+		auto conn = std::make_shared<Tcp_connection>(io, sock, msg_que, -1);
+		conn->run();
+	}
+}
+
+void Room_system::verify_request(std::shared_ptr<Proto_msg>msg)
+{
+	int session_id, room_id, verify_code;
+	deserialize_obj(msg->body, session_id, room_id, verify_code);
+
+	// do some verify work.
+	// ...
+	// ...
+	session[session_id] = Tcp_connection::get_conn_from_body(msg->body);
+	room[room_id]->link_player(session_id, session[session_id]);
+}
+
+void Room_system::room_request(std::shared_ptr<Proto_msg> msg)
+{
+	Room_info room_info;
+	deserialize_obj(msg->body, room_info);
+	if (room.find(room_info.room_id) != room.end())
+	{
+		std::cerr << "receive a existed room" << std::endl;
+		return;
+	}
+	auto new_room = std::make_shared<Game_room>(io, room_info);
+	new_room->run();
+	room[room_info.room_id] = new_room;
+	auto ack_msg = std::make_shared<Proto_msg>(1, 502);
+	serialize_obj(ack_msg->body, room_info.room_id);
+	conn->push_event(ack_msg);
+}
+
+void Room_system::route()
+{
+	if (msg_que.empty())
+	{
+		io.post(bind(&Room_system::route, shared_from_this()));
+		return;
+	}
+	std::shared_ptr<Proto_msg> msg = msg_que.front();
+	msg_que.pop();
+	switch (msg->head.service)
+	{
+	case 1001:
+		verify_request(msg);
+		break;
+	case 501:
+		room_request(msg);
+		break;
+	}
+	io.post(bind(&Room_system::route, shared_from_this()));
+}

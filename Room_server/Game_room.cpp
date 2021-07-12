@@ -1,11 +1,38 @@
 #include "Game_room.h"
 
 Game_room::Game_room(io_context& _io, const Room_info& _room_info) :
-	io(_io), room_info(_room_info), resource_distributor(_room_info.capacity) {}
-
-std::shared_ptr<Actionable_character> Game_room::get_player(int session_id)
+	io(_io), room_info(_room_info), resource_distributor(_room_info.capacity)
 {
-	return player[session_id];
+}
+
+void Game_room::run()
+{
+	room_create_time = std::chrono::steady_clock::now();
+	io.post(bind(&Game_room::start_game, shared_from_this()));
+}
+
+void Game_room::link_player(int session_id, std::shared_ptr<Tcp_connection> conn)
+{
+	session[session_id] = conn;
+	conn->set_msg_que(msg_que);
+	init_player++;
+}
+
+void Game_room::start_game()
+{
+	using namespace std::chrono;
+	if (!(room_create_time - steady_clock::now() >= 5s || init_player == room_info.capacity))
+	{
+		io.post(bind(&Game_room::start_game, shared_from_this()));
+		return;
+	}
+	load_player();
+	today_time = start_time = steady_clock::now();
+	last_broadcast_time = 0s;
+	stage = STAGE::READY;
+	atk_graph.resize(room_info.capacity);
+	io.post(bind(&Game_room::ready_stage, shared_from_this(), true));
+	io.post(bind(&Game_room::broadcast_time, shared_from_this()));
 }
 
 void Game_room::load_player()
@@ -33,16 +60,16 @@ void Game_room::load_player()
 		break;
 	}
 	std::shuffle(vec.begin(), vec.end(), std::default_random_engine(time(0)));
-	auto uite = users.begin();
+	auto uite = room_info.user.begin();
 	auto vite = vec.begin();
 	int game_id = 0;
 	order_player.reserve(room_info.capacity);
-	for (; uite != users.end(); uite++, game_id++)
+	for (; uite != room_info.user.end(); uite++, game_id++)
 	{
-		player[*uite] = Character_factory::create(*vite, game_id, *uite);
-		session_to_game[*uite] = game_id;
-		order_player.push_back(player[*uite]);
-		location[0].insert(player[*uite]);
+		player[uite->session_id] = Character_factory::create(*vite, game_id, uite->session_id);
+		session_to_game[uite->session_id] = game_id;
+		order_player.push_back(player[uite->session_id]);
+		location[0].insert(player[uite->session_id]);
 		vite++;
 	}
 }

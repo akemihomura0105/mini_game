@@ -1,9 +1,18 @@
 #include "Tcp_connection.h"
 #include "Tcp_connection.h"
 
+std::shared_ptr<Tcp_connection> Tcp_connection::get_conn_from_body(std::string& body)
+{
+	std::shared_ptr<Tcp_connection>* ptr;
+	memcpy(&ptr, &body[body.size() - sizeof(void*)], sizeof(void*));
+	auto conn = *ptr;
+	delete ptr;
+	return conn;
+}
+
 Tcp_connection::Tcp_connection(io_context& _io, std::shared_ptr<ip::tcp::socket> _sock,
 	std::queue<std::shared_ptr<Proto_msg>>& _msg_que, int _session_id)
-	:io(_io), sock(_sock), msg_que(_msg_que), session_id(_session_id)
+	:io(_io), sock(_sock), msg_que(&_msg_que), session_id(_session_id)
 {
 	write_buf.resize(65536);
 	read_buf.resize(65536);
@@ -25,7 +34,7 @@ void Tcp_connection::close()
 {
 	auto msg = std::make_shared<Proto_msg>(1, 50000);
 	serialize_obj(msg->body, session_id);
-	msg_que.push(msg);
+	msg_que->push(msg);
 }
 
 void Tcp_connection::get_msg(yield_context yield)
@@ -33,15 +42,26 @@ void Tcp_connection::get_msg(yield_context yield)
 	while (true)
 	{
 		auto proto_ptr = std::make_shared<Proto_msg>();
+		auto& head = proto_ptr->head;
+		auto& body = proto_ptr->body;
 		boost::system::error_code ec;
-		async_read(*sock, buffer(&proto_ptr->head, sizeof(Proto_head)), yield[ec]);
+		async_read(*sock, buffer(&head, sizeof(Proto_head)), yield[ec]);
 		if (socket_error_solve(ec))
 			return;
-		proto_ptr->body.resize(proto_ptr->head.len);
+
+		if (1000 <= head.service && head.service <= 1999)
+		{
+			auto* p = new std::shared_ptr<Tcp_connection>;
+			*p = shared_from_this();
+			body.resize(head.len + sizeof(void*));
+			memcpy(&body[body.size() - sizeof(void*)], &p, sizeof(void*));
+		}
+		else
+			proto_ptr->body.resize(proto_ptr->head.len);
 		async_read(*sock, buffer(proto_ptr->body, proto_ptr->head.len), yield[ec]);
 		if (socket_error_solve(ec))
 			return;
-		msg_que.push(proto_ptr);
+		msg_que->push(proto_ptr);
 	}
 }
 
@@ -78,10 +98,16 @@ bool Tcp_connection::socket_error_solve(const boost::system::error_code& ec)
 		{
 			auto msg = std::make_shared<Proto_msg>(1, 50000);
 			serialize_obj(msg->body, session_id);
-			msg_que.push(msg);
+			msg_que->push(msg);
 		}
 		std::cerr << ec.message();
 		return true;
 	}
 	return false;
+}
+
+bool Tcp_connection::set_msg_que(std::queue<std::shared_ptr<Proto_msg>>& new_msg_que)
+{
+	msg_que = &new_msg_que;
+	return true;
 }
